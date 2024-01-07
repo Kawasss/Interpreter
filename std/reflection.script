@@ -1,0 +1,2 @@
+extern string nameof(void var);
+extern string typeof(void var);

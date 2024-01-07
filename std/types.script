@@ -1,0 +1,3 @@
+extern string ToString(float value);
+extern float ToFloat(string text);
+extern int ToInt(string text);

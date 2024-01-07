@@ -1,0 +1,11 @@
+import "std/io.script"
+
+void main()
+{
+    WriteLine("Hello..?");
+
+    string part1 = "Hello ";
+    string part2 = GetLine();
+
+    WriteLine(part1 + part2);
+}
