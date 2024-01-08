@@ -1,8 +1,7 @@
 #pragma once
 #include "common.hpp"
+#include "StackFrame.hpp"
 #include <unordered_map>
-
-typedef std::unordered_map<std::string, Variable> StackFrame;
 
 struct FunctionInfo
 {

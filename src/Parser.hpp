@@ -5,6 +5,8 @@
 #include "Lexer.hpp"
 #include "Function.hpp"
 
+typedef std::vector<std::vector<Lexer::Token>> FunctionBody;
+
 struct AbstractSyntaxTree
 {
 	std::unordered_set<Function*> functions;
@@ -16,8 +18,11 @@ class Parser
 public:
 	static AbstractSyntaxTree CreateAST(std::vector<Lexer::Token>& tokens);
 	static std::vector<FunctionInfo> GetAllFunctionInfos(std::vector<Lexer::Token>& tokens);
-	static void ParseLine(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret);
-	static std::vector<Instruction> GetInstructions(std::vector<Lexer::Token>& tokens);
+	static void ParseTokens(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret);
+
+	static std::vector<Instruction> GetInstructionsFromScope(std::vector<Lexer::Token>& tokens);
+	static std::vector<Instruction> GetInstructionsFromBody(FunctionBody& body);
+
 	static void GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo);
 
 	static VariableInfo GetAssignVariableInfo(std::vector<Lexer::Token>& lvalue);
@@ -26,6 +31,8 @@ public:
 
 private:
 	static std::vector<std::vector<Lexer::Token>> DivideByEndLine(std::vector<Lexer::Token>& tokens);
+	static FunctionBody GetAllScopesFromBody(std::vector<Lexer::Token>& tokens);
+
 	static std::vector<Instruction> GetDefinitionInstructions(VariableInfo& info, VariableInfo& startValue);
 	static std::vector<Instruction> GetCallFunctionInstructions(FunctionInfo& info, std::vector<VariableInfo>& parameterVars);
 	static void GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);

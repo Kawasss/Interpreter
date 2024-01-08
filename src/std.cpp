@@ -19,7 +19,7 @@ WriteLine::WriteLine()
 
 void WriteLine::Execute()
 {
-	std::cout << (std::string)stackFrame["text"] << "\n";
+	std::cout << (std::string)*Interpreter::FindVariable("text") << "\n";
 }
 
 ToString::ToString()
@@ -30,7 +30,7 @@ ToString::ToString()
 
 void ToString::Execute()
 {
-	Return({ std::to_string((float)stackFrame["value"]), DATA_TYPE_STRING_CONSTANT });
+	Return({ std::to_string((float)*Interpreter::FindVariable("value")), DATA_TYPE_STRING_CONSTANT });
 }
 
 ToFloat::ToFloat()
@@ -41,7 +41,7 @@ ToFloat::ToFloat()
 
 void ToFloat::Execute()
 {
-	Return({ std::to_string(std::stof(stackFrame["text"])), DATA_TYPE_FLOAT_CONSTANT });
+	Return({ std::to_string(std::stof(*Interpreter::FindVariable("text"))), DATA_TYPE_FLOAT_CONSTANT });
 }
 
 ToInt::ToInt()
@@ -52,7 +52,7 @@ ToInt::ToInt()
 
 void ToInt::Execute()
 {
-	Return({ std::to_string(std::stoi(stackFrame["text"])), DATA_TYPE_INT_CONSTANT });
+	Return({ std::to_string(std::stoi(*Interpreter::FindVariable("text"))), DATA_TYPE_INT_CONSTANT });
 }
 
 nameof::nameof()
@@ -74,7 +74,7 @@ typeof::typeof()
 
 void typeof::Execute()
 {
-	Return({ DataTypeToString(stackFrame["var"].type), DATA_TYPE_STRING_CONSTANT });
+	Return({ DataTypeToString(Interpreter::FindVariable("var")->type), DATA_TYPE_STRING_CONSTANT });
 }
 
 std::string typeof::DataTypeToString(DataType type)

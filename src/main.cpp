@@ -6,7 +6,7 @@
 #include "Function.hpp"
 #include "std.hpp"
 
-// do something with args, like -v for verbose, then store them with flags in an enum and pass that to the interpreter
+// do something with args, like -verbose and -entry_point string, then store them with flags in an enum and pass that to the interpreter
 
 inline std::vector<char> ReadFile(const std::string& filePath)
 {
@@ -58,10 +58,17 @@ inline void InterpretString(std::string input)
 
 int main(int argsc, const char** argsv)
 {
-	std::vector<char> code = ReadFile("script/test.script");
-	std::string strCode = code.data();
+	try 
+	{
+		std::vector<char> code = ReadFile("script/test.script");
+		std::string strCode = code.data();
 
-	InterpretString(strCode);
+		InterpretString(strCode);
+	}
+	catch (std::exception& ex)
+	{
+		std::cerr << ex.what() << std::endl;
+	}
 
 	return 0;
 }

@@ -25,6 +25,8 @@ Variable::Variable(std::string value, std::string name)
 
 Variable& Variable::operator+=(const Variable& rvalue)
 {
+	if ((type == DATA_TYPE_STRING || type == DATA_TYPE_STRING_CONSTANT) && (rvalue.type != DATA_TYPE_STRING && rvalue.type != DATA_TYPE_STRING_CONSTANT))
+		throw std::runtime_error("Cannot add a non-string value to a string");
 	if (type == DATA_TYPE_STRING || type == DATA_TYPE_STRING_CONSTANT)
 		str += rvalue.str;
 	else

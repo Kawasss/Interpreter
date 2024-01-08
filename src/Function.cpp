@@ -32,13 +32,8 @@ void Function::CreateParameters()
 
 void Function::ExecuteBody()
 {
-	Interpreter::SetLocalScope(&stackFrame);
 	CreateParameters();
-	
 	Execute();
-
-	stackFrame.clear();
-	Interpreter::GotoLowerScope();
 }
 
 void Function::Execute()
@@ -52,12 +47,15 @@ void Function::Execute()
 
 void Function::Return(VariableInfo info)
 {
+	static Instruction returnInst{ INSTRUCTION_TYPE_RETURN };
+
 	Instruction assignInst{};
 	assignInst.type = INSTRUCTION_TYPE_ASSIGN;
 	assignInst.operand1 = floatReturnVar;
 	assignInst.operand2 = info;
 
 	Interpreter::ExecuteInstruction(assignInst);
+	Interpreter::ExecuteInstruction(returnInst);
 }
 
 std::string Function::GetName()

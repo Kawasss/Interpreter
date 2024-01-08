@@ -108,6 +108,8 @@ struct Variable
 
 	template<typename T> Variable& operator=(T rvalue)
 	{
+		if (type == DATA_TYPE_STRING && !std::is_same_v<T, std::string>)
+			throw std::runtime_error("Cannot assign non-string value to a string variable");
 		str = "";
 		if (std::is_same_v<T, std::string>)
 			str = rvalue;

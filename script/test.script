@@ -1,11 +1,13 @@
 import "std/io.script"
+import "std/types.script"
+
+float add(float var1, float var2)
+{
+    return var1 + var2;
+}
 
 void main()
 {
-    WriteLine("Hello..?");
-
-    string part1 = "Hello ";
-    string part2 = GetLine();
-
-    WriteLine(part1 + part2);
+    float test = add(1, 2);
+    WriteLine(ToString(test));
 }

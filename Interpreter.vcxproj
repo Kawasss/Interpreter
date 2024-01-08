@@ -25,6 +25,8 @@
     <ClCompile Include="src\Function.cpp" />
     <ClCompile Include="src\Lexer.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\StackFrame.cpp" />
+    <ClCompile Include="src\Stack.cpp" />
     <ClCompile Include="src\std.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -33,6 +35,8 @@
     <ClInclude Include="src\Parser.hpp" />
     <ClInclude Include="src\Function.hpp" />
     <ClInclude Include="src\Lexer.hpp" />
+    <ClInclude Include="src\Stack.hpp" />
+    <ClInclude Include="src\StackFrame.hpp" />
     <ClInclude Include="src\std.hpp" />
   </ItemGroup>
   <ItemGroup>

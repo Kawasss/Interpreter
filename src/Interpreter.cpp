@@ -3,19 +3,16 @@
 #include "Interpreter.hpp"
 #include "Parser.hpp"
 
-StackFrame Interpreter::cacheVariables;
-StackFrame* Interpreter::localScope;
-StackFrame Interpreter::enclosingScope;
-StackFrame Interpreter::globalScope;
+Scope Interpreter::cacheVariables;
 
 std::unordered_map<std::string, Function*> Interpreter::functions;
 std::unordered_map<std::string, std::vector<Variable>> Interpreter::buffers;
-std::vector<StackFrame*> Interpreter::stack;
+Stack Interpreter::stack;
 
 void Interpreter::Init()
 {
-	DeclareVariable(floatCalculationVar, &cacheVariables);
-	DeclareVariable(floatReturnVar, &cacheVariables);
+	cacheVariables[floatCalculationVar.name] = { floatCalculationVar.name, { floatCalculationVar.dataType } };
+	cacheVariables[floatReturnVar.name] = { floatReturnVar.name, { floatReturnVar.dataType } };
 	DeclareBuffer(bufferParametersVar.name);
 }
 
@@ -83,7 +80,7 @@ bool Interpreter::ExecuteInstruction(Instruction& instruction)
 	}
 
 	case INSTRUCTION_TYPE_DECLARE:
-		DeclareVariable(instruction.operand1, localScope);
+		DeclareVariable(instruction.operand1);
 		break;
 
 	case INSTRUCTION_TYPE_PUSH: // push a variable at the back of a buffer
@@ -91,13 +88,22 @@ bool Interpreter::ExecuteInstruction(Instruction& instruction)
 		buffers[instruction.operand1.name].back().name = instruction.operand2.name;
 		break;
 	case INSTRUCTION_TYPE_PULL: // pull the oldest value from a buffer
+		if (buffers[instruction.operand1.name].empty())
+			throw std::runtime_error("Cannot pull from buffer " + instruction.operand1.name + ": it is empty");
 		*FindVariable(instruction.operand2) = buffers[instruction.operand1.name][0];
 		buffers[instruction.operand1.name].erase(buffers[instruction.operand1.name].begin());
 		break;
 
 	case INSTRUCTION_TYPE_CALL:
+		stack.CreateNewStackFrame(); // add a new, empty stack
 		functions[instruction.operand1.name]->ExecuteBody();
 		break;
+	case INSTRUCTION_TYPE_RETURN:
+		stack.GotoEnclosingStackFrame(); // remove the stack of the finished function
+		break;
+
+	case INSTRUCTION_TYPE_INVALID:
+		throw std::runtime_error("Recieved invalid Instruction");
 	}
 	return true;
 }
@@ -118,18 +124,17 @@ Variable* Interpreter::FindVariable(std::string name)
 {
 	if (cacheVariables.count(name) > 0)
 		return &cacheVariables[name];
-	if (localScope->count(name) > 0)
-		return &localScope->at(name);
-	if (enclosingScope.count(name) > 0)
-		return &enclosingScope[name];
-	if (globalScope.count(name) > 0)
-		return &globalScope[name];
+
+	for (int i = 0; i < stack.Size(); i++)
+		if (stack[i].Has(name))
+			return &stack[i].GetVariable(name);
+
 	throw std::runtime_error("Failed to find variable " + name);
 }
 
-void Interpreter::DeclareVariable(const VariableInfo& info, StackFrame* stackFrame)
+void Interpreter::DeclareVariable(const VariableInfo& info)
 {
-	stackFrame->insert({ info.name, { info.name, info.dataType } });
+	stack.Last().Allocate(info);
 	//std::cout << "Created new variable \"" << info.name << "\"\n";
 }
 
@@ -138,31 +143,9 @@ Variable* Interpreter::FindVariable(VariableInfo& info)
 	return FindVariable(info.name);
 }
 
-void Interpreter::SetLocalScope(StackFrame* pStackFrame)
-{
-	if (pStackFrame->count(floatCalculationVar.name) <= 0) // every stack frame has its own float calc var
-		pStackFrame->insert({ floatCalculationVar.name, { floatCalculationVar.name, floatCalculationVar.dataType } });
-	stack.push_back(pStackFrame);
-	localScope = stack.back();
-}
-
-void Interpreter::GotoEnclosingScope()
-{
-	localScope = &enclosingScope;
-}
-
-void Interpreter::GotoLowerScope()
-{
-	if (stack.size() == 1)
-		return;
-
-	stack.pop_back();
-	localScope = stack.back();
-}
-
 void Interpreter::CopyLocalVariableToStackFrame(std::string sourceName, std::string newName, StackFrame* destination)
 {
-	destination->insert({ newName, localScope->at(sourceName) });
+	destination->Allocate({ newName, DATA_TYPE_VOID });
 }
 
 void Interpreter::DeclareBuffer(std::string name)

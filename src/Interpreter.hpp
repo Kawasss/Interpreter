@@ -1,10 +1,11 @@
 #pragma once
 #include "common.hpp"
+#include "StackFrame.hpp"
+#include "Stack.hpp"
 #include <unordered_map>
 
 class Function;
 struct AbstractSyntaxTree;
-typedef std::unordered_map<std::string, Variable> StackFrame;
 
 const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_FLOAT };
 const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_FLOAT };
@@ -29,11 +30,9 @@ public:
 	static Variable* FindVariable(std::string name);
 	static Variable* FindVariable(VariableInfo& info);
 	static Variable  GetValue(VariableInfo& info);
-	static void DeclareVariable(const VariableInfo& info, StackFrame* stackFrame);
+	static void DeclareVariable(const VariableInfo& info);
 	static void DeclareBuffer(std::string name);
-	static void SetLocalScope(StackFrame* pStackFrame);
-	static void GotoEnclosingScope();
-	static void GotoLowerScope();
+
 	static void CopyLocalVariableToStackFrame(std::string sourceName, std::string newName, StackFrame* destination);
 
 	template<typename T> static T FindVariable(VariableInfo& info)
@@ -42,12 +41,9 @@ public:
 	}
 
 private:
-	static StackFrame cacheVariables;
-	static StackFrame* localScope;
-	static StackFrame enclosingScope;
-	static StackFrame globalScope;
+	static Scope cacheVariables;
 
 	static std::unordered_map<std::string, Function*> functions;
 	static std::unordered_map<std::string, std::vector<Variable>> buffers;
-	static std::vector<StackFrame*> stack;
+	static Stack stack;
 };
