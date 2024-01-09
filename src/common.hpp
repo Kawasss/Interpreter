@@ -121,6 +121,8 @@ struct Variable
 	std::string name = "";
 	DataType type = DATA_TYPE_INVALID;
 
+	std::string AsString();
+
 private:
 	size_t size = 0;
 	float data = 0;

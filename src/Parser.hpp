@@ -38,7 +38,7 @@ private:
 	static std::vector<Instruction> GetDefinitionInstructions(VariableInfo& info, VariableInfo& startValue);
 	static std::vector<Instruction> GetCallFunctionInstructions(FunctionInfo& info, std::vector<VariableInfo>& parameterVars);
 	static void GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);
+	static void GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t index, std::vector<Instruction>& ret);
 
-	static std::unordered_map<Lexeme, InstructionType> lexemeToInstructionType;
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
 };

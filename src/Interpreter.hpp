@@ -28,8 +28,7 @@ public:
 	static void SetAST(AbstractSyntaxTree& ast);
 	static void SetExternFunction(Function* function);
 
-	static bool ExecuteInstruction(Instruction& instruction);
-	template<typename T, typename Y> bool ExecuteInstruction(InstructionType type, Variable* operand1, Variable* operand2, void* pNext = nullptr);
+	static bool ExecuteInstructions(const std::vector<Instruction> instructions); // copying isnt the best move
 	static Variable* FindVariable(std::string name);
 	static Variable* FindVariable(VariableInfo& info);
 	static Variable  GetValue(VariableInfo& info);

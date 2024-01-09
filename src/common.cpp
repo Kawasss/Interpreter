@@ -130,6 +130,26 @@ Variable::operator std::string() const
 	return str;
 }
 
+std::string Variable::AsString()
+{
+	switch (type)
+	{
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return std::string{ str };
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return std::to_string((float)data);
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return std::to_string((int)data);
+	case DATA_TYPE_STRING:
+	case DATA_TYPE_STRING_CONSTANT:
+		return str;
+	}
+	return "Cannot convert variable to string";
+}
+
 size_t Sizeof(DataType dataType)
 {
 	switch (dataType)

@@ -25,8 +25,7 @@ void Function::CreateParameters()
 		pullInst.operand1 = bufferParametersVar;
 		pullInst.operand2 = parameters[i];
 
-		Interpreter::ExecuteInstruction(declInst);
-		Interpreter::ExecuteInstruction(pullInst);
+		Interpreter::ExecuteInstructions({ declInst, pullInst });
 	}
 }
 
@@ -38,11 +37,8 @@ void Function::ExecuteBody()
 
 void Function::Execute()
 {
-	for (int i = 0; i < instructions.size(); i++)
-	{
-		if (!Interpreter::ExecuteInstruction(instructions[i]))
-			throw std::runtime_error("Failed to execute an instruction");
-	}
+	if (!Interpreter::ExecuteInstructions(instructions))
+		throw std::runtime_error("Failed to execute an instruction");
 }
 
 void Function::Return(VariableInfo info)
@@ -54,8 +50,7 @@ void Function::Return(VariableInfo info)
 	assignInst.operand1 = floatReturnVar;
 	assignInst.operand2 = info;
 
-	Interpreter::ExecuteInstruction(assignInst);
-	Interpreter::ExecuteInstruction(returnInst);
+	Interpreter::ExecuteInstructions({ assignInst, returnInst });
 }
 
 std::string Function::GetName()

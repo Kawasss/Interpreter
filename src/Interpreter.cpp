@@ -32,92 +32,89 @@ void Interpreter::SetExternFunction(Function* function)
 	functions[function->GetName()] = function;
 }
 
-bool Interpreter::ExecuteInstruction(Instruction& instruction)
+bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 {
-	static size_t instructionsToSkip = 0;
-	if (instructionsToSkip > 0)
+	for (size_t instructionPointer = 0; instructionPointer < instructions.size(); instructionPointer++)
 	{
-		instructionsToSkip--;
-		return true;
-	}
+		Instruction& instruction = instructions[instructionPointer];
+		switch (instruction.type)
+		{
+		case INSTRUCTION_TYPE_ADD:
+			*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) + GetValue(instruction.operand2);
+			break;
+		case INSTRUCTION_TYPE_SUBTRACT:
+			*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) - GetValue(instruction.operand2);
+			break;
+		case INSTRUCTION_TYPE_DIVIDE:
+			*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) / GetValue(instruction.operand2);
+			break;
+		case INSTRUCTION_TYPE_MULTIPLY:
+			*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) * GetValue(instruction.operand2);
+			break;
+		case INSTRUCTION_TYPE_EQUAL:
+			if (*FindVariable(instruction.operand1) == GetValue(instruction.operand2)) // the second instruction only gets executed if the comparison is false
+				instructionPointer++;
+			break;
+		case INSTRUCTION_TYPE_NOT_EQUAL:
+			if (*FindVariable(instruction.operand1) != GetValue(instruction.operand2))
+				instructionPointer++;
+			break;
+		case INSTRUCTION_TYPE_GREATER:
+			if (*FindVariable(instruction.operand1) > GetValue(instruction.operand2))
+				instructionPointer++;
+			break;
+		case INSTRUCTION_TYPE_LESS:
+			if (*FindVariable(instruction.operand1) < GetValue(instruction.operand2))
+				instructionPointer++;
+			break;
+		case INSTRUCTION_TYPE_EQUAL_OR_GREATER:
+			if (*FindVariable(instruction.operand1) >= GetValue(instruction.operand2))
+				instructionPointer++;
+			break;
+		case INSTRUCTION_TYPE_EQUAL_OR_LESS:
+			if (*FindVariable(instruction.operand1) <= GetValue(instruction.operand2))
+				instructionPointer++;
+			break;
 
-	switch (instruction.type)
-	{
-	case INSTRUCTION_TYPE_ADD:
-		*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) + GetValue(instruction.operand2);
-		break;
-	case INSTRUCTION_TYPE_SUBTRACT:
-		*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) - GetValue(instruction.operand2);
-		break;
-	case INSTRUCTION_TYPE_DIVIDE:
-		*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) / GetValue(instruction.operand2);
-		break;
-	case INSTRUCTION_TYPE_MULTIPLY:
-		*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) * GetValue(instruction.operand2);
-		break;
-	case INSTRUCTION_TYPE_EQUAL:
-		if (*FindVariable(instruction.operand1) == GetValue(instruction.operand2)) // encase the comparisons in !(), because the second instruction only gets executed if the comparison is false
-			instructionsToSkip++;
-		break;
-	case INSTRUCTION_TYPE_NOT_EQUAL:
-		if (*FindVariable(instruction.operand1) != GetValue(instruction.operand2))
-			instructionsToSkip++;
-		break;
-	case INSTRUCTION_TYPE_GREATER:
-		if (*FindVariable(instruction.operand1) > GetValue(instruction.operand2))
-			instructionsToSkip++;
-		break;
-	case INSTRUCTION_TYPE_LESS:
-		if (*FindVariable(instruction.operand1) < GetValue(instruction.operand2))
-			instructionsToSkip++;
-		break;
-	case INSTRUCTION_TYPE_EQUAL_OR_GREATER:
-		if (*FindVariable(instruction.operand1) >= GetValue(instruction.operand2))
-			instructionsToSkip++;
-		break;
-	case INSTRUCTION_TYPE_EQUAL_OR_LESS:
-		if (*FindVariable(instruction.operand1) <= GetValue(instruction.operand2))
-			instructionsToSkip++;
-		break;
+		case INSTRUCTION_TYPE_ASSIGN:
+		{
+			Variable var = GetValue(instruction.operand2);
+			*FindVariable(instruction.operand1) = var;// GetValue(instruction.operand2);
+			if (cacheVariables.count(instruction.operand2.name) > 0) // if a cache variable is read from (done being used) it gets reset
+				cacheVariables[instruction.operand2.name] = 0;
+			break;
+		}
 
-	case INSTRUCTION_TYPE_ASSIGN:
-	{
-		Variable var = GetValue(instruction.operand2);
-		*FindVariable(instruction.operand1) = var;// GetValue(instruction.operand2);
-		if (cacheVariables.count(instruction.operand2.name) > 0) // if a cache variable is read from (done being used) it gets reset
-			cacheVariables[instruction.operand2.name] = 0;
-		break;
-	}
+		case INSTRUCTION_TYPE_DECLARE:
+			DeclareVariable(instruction.operand1);
+			break;
 
-	case INSTRUCTION_TYPE_DECLARE:
-		DeclareVariable(instruction.operand1);
-		break;
+		case INSTRUCTION_TYPE_PUSH: // push a variable at the back of a buffer
+			buffers[instruction.operand1.name].push_back(GetValue(instruction.operand2));
+			buffers[instruction.operand1.name].back().name = instruction.operand2.name;
+			break;
+		case INSTRUCTION_TYPE_PULL: // pull the oldest value from a buffer
+			if (buffers[instruction.operand1.name].empty())
+				throw std::runtime_error("Cannot pull from buffer " + instruction.operand1.name + ": it is empty");
+			*FindVariable(instruction.operand2) = buffers[instruction.operand1.name][0];
+			buffers[instruction.operand1.name].erase(buffers[instruction.operand1.name].begin());
+			break;
 
-	case INSTRUCTION_TYPE_PUSH: // push a variable at the back of a buffer
-		buffers[instruction.operand1.name].push_back(GetValue(instruction.operand2));
-		buffers[instruction.operand1.name].back().name = instruction.operand2.name;
-		break;
-	case INSTRUCTION_TYPE_PULL: // pull the oldest value from a buffer
-		if (buffers[instruction.operand1.name].empty())
-			throw std::runtime_error("Cannot pull from buffer " + instruction.operand1.name + ": it is empty");
-		*FindVariable(instruction.operand2) = buffers[instruction.operand1.name][0];
-		buffers[instruction.operand1.name].erase(buffers[instruction.operand1.name].begin());
-		break;
+		case INSTRUCTION_TYPE_CALL:
+			stack.CreateNewStackFrame(); // add a new, empty stack
+			functions[instruction.operand1.name]->ExecuteBody();
+			break;
+		case INSTRUCTION_TYPE_RETURN:
+			stack.GotoEnclosingStackFrame(); // remove the stack of the finished function
+			break;
 
-	case INSTRUCTION_TYPE_CALL:
-		stack.CreateNewStackFrame(); // add a new, empty stack
-		functions[instruction.operand1.name]->ExecuteBody();
-		break;
-	case INSTRUCTION_TYPE_RETURN:
-		stack.GotoEnclosingStackFrame(); // remove the stack of the finished function
-		break;
+		case INSTRUCTION_TYPE_JUMP:
+			instructionPointer += (size_t)std::stoi(instruction.operand1.name) - 1;
+			break;
 
-	case INSTRUCTION_TYPE_JUMP:
-		instructionsToSkip = std::stoi(instruction.operand1.name);
-		break;
-
-	case INSTRUCTION_TYPE_INVALID:
-		throw std::runtime_error("Recieved invalid instruction");
+		case INSTRUCTION_TYPE_INVALID:
+			throw std::runtime_error("Recieved invalid instruction");
+		}
 	}
 	return true;
 }
@@ -127,11 +124,22 @@ inline bool IsConstant(DataType type)
 	return type == DATA_TYPE_CHAR_CONSTANT || type == DATA_TYPE_FLOAT_CONSTANT || type == DATA_TYPE_INT_CONSTANT || type == DATA_TYPE_STRING_CONSTANT;
 }
 
+inline Variable GetConstantTypeAsVariable(VariableInfo& info)
+{
+	switch (info.dataType)
+	{
+	case DATA_TYPE_STRING_CONSTANT:
+	case DATA_TYPE_CHAR_CONSTANT:  return info.name;
+	case DATA_TYPE_FLOAT_CONSTANT: return std::stof(info.name);
+	case DATA_TYPE_INT_CONSTANT:   return std::stoi(info.name);
+	}
+}
+
 Variable Interpreter::GetValue(VariableInfo& info)
 {
 	if (info.dataType == DATA_TYPE_STRING_CONSTANT)
 		return info.name;
-	return IsConstant(info.dataType) ? (Variable)std::stof(info.name) : *FindVariable(info);
+	return IsConstant(info.dataType) ? GetConstantTypeAsVariable(info) : *FindVariable(info);
 }
 
 Variable* Interpreter::FindVariable(std::string name)

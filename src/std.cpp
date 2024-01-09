@@ -30,7 +30,7 @@ ToString::ToString()
 
 void ToString::Execute()
 {
-	Return({ std::to_string((float)*Interpreter::FindVariable("value")), DATA_TYPE_STRING_CONSTANT });
+	Return({ Interpreter::FindVariable("value")->AsString(), DATA_TYPE_STRING_CONSTANT });
 }
 
 ToFloat::ToFloat()
