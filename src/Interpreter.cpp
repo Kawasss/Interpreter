@@ -11,8 +11,11 @@ Stack Interpreter::stack;
 
 void Interpreter::Init()
 {
-	cacheVariables[floatCalculationVar.name] = { floatCalculationVar.name, { floatCalculationVar.dataType } };
-	cacheVariables[floatReturnVar.name] = { floatReturnVar.name, { floatReturnVar.dataType } };
+	DeclareCacheVariable(floatCalculationVar);
+	DeclareCacheVariable(floatStorageVar);
+	DeclareCacheVariable(floatReturnVar);
+	DeclareCacheVariable(leftBoolValue);
+	DeclareCacheVariable(rightBoolValue);
 	DeclareBuffer(bufferParametersVar.name);
 }
 
@@ -31,6 +34,13 @@ void Interpreter::SetExternFunction(Function* function)
 
 bool Interpreter::ExecuteInstruction(Instruction& instruction)
 {
+	static size_t instructionsToSkip = 0;
+	if (instructionsToSkip > 0)
+	{
+		instructionsToSkip--;
+		return true;
+	}
+
 	switch (instruction.type)
 	{
 	case INSTRUCTION_TYPE_ADD:
@@ -46,28 +56,28 @@ bool Interpreter::ExecuteInstruction(Instruction& instruction)
 		*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) * GetValue(instruction.operand2);
 		break;
 	case INSTRUCTION_TYPE_EQUAL:
-		if (*FindVariable(instruction.operand1) == GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+		if (*FindVariable(instruction.operand1) == GetValue(instruction.operand2)) // encase the comparisons in !(), because the second instruction only gets executed if the comparison is false
+			instructionsToSkip++;
 		break;
 	case INSTRUCTION_TYPE_NOT_EQUAL:
 		if (*FindVariable(instruction.operand1) != GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+			instructionsToSkip++;
 		break;
 	case INSTRUCTION_TYPE_GREATER:
 		if (*FindVariable(instruction.operand1) > GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+			instructionsToSkip++;
 		break;
 	case INSTRUCTION_TYPE_LESS:
 		if (*FindVariable(instruction.operand1) < GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+			instructionsToSkip++;
 		break;
 	case INSTRUCTION_TYPE_EQUAL_OR_GREATER:
 		if (*FindVariable(instruction.operand1) >= GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+			instructionsToSkip++;
 		break;
 	case INSTRUCTION_TYPE_EQUAL_OR_LESS:
 		if (*FindVariable(instruction.operand1) <= GetValue(instruction.operand2))
-			ExecuteInstruction(*(Instruction*)instruction.pNext);
+			instructionsToSkip++;
 		break;
 
 	case INSTRUCTION_TYPE_ASSIGN:
@@ -102,8 +112,12 @@ bool Interpreter::ExecuteInstruction(Instruction& instruction)
 		stack.GotoEnclosingStackFrame(); // remove the stack of the finished function
 		break;
 
+	case INSTRUCTION_TYPE_JUMP:
+		instructionsToSkip = std::stoi(instruction.operand1.name);
+		break;
+
 	case INSTRUCTION_TYPE_INVALID:
-		throw std::runtime_error("Recieved invalid Instruction");
+		throw std::runtime_error("Recieved invalid instruction");
 	}
 	return true;
 }
@@ -151,4 +165,9 @@ void Interpreter::CopyLocalVariableToStackFrame(std::string sourceName, std::str
 void Interpreter::DeclareBuffer(std::string name)
 {
 	buffers[name] = {};
+}
+
+void Interpreter::DeclareCacheVariable(const VariableInfo& info)
+{
+	cacheVariables[info.name] = { info.name, { info.dataType } };
 }

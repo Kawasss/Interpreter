@@ -18,9 +18,9 @@ class Parser
 public:
 	static AbstractSyntaxTree CreateAST(std::vector<Lexer::Token>& tokens);
 	static std::vector<FunctionInfo> GetAllFunctionInfos(std::vector<Lexer::Token>& tokens);
-	static void ParseTokens(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret);
+	static void ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, size_t& scopesTraversed);
 
-	static std::vector<Instruction> GetInstructionsFromScope(std::vector<Lexer::Token>& tokens);
+	static std::vector<Instruction> GetInstructionsFromScopes(std::vector<std::vector<Lexer::Token>>& tokens);
 	static std::vector<Instruction> GetInstructionsFromBody(FunctionBody& body);
 
 	static void GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo);
@@ -30,6 +30,8 @@ public:
 	static bool IsFunctionDeclaration(std::vector<Lexer::Token>& tokens);
 
 private:
+	static size_t sizeOfNextScope; // hack
+
 	static std::vector<std::vector<Lexer::Token>> DivideByEndLine(std::vector<Lexer::Token>& tokens);
 	static FunctionBody GetAllScopesFromBody(std::vector<Lexer::Token>& tokens);
 

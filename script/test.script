@@ -1,13 +1,13 @@
 import "std/io.script"
 import "std/types.script"
 
-float add(float var1, float var2)
-{
-    return var1 + var2;
-}
-
 void main()
 {
-    float test = add(1, 2);
+    string input = GetLine();
+    int test = ToInt(input);
+    if (test == 3)
+    {
+        WriteLine("scope");
+    }
     WriteLine(ToString(test));
 }
