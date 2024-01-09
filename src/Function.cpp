@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "Function.hpp"
 #include "Interpreter.hpp"
+#include "Debug.hpp"
 
 Function::Function(FunctionInfo& info)
 {
@@ -9,7 +10,11 @@ Function::Function(FunctionInfo& info)
 	this->parameters = info.parameters;
 	this->returnType = info.returnType;
 	this->instructions = info.instructions;
-	//std::cout << "Created new function " << name << "\n";
+	if (!instructions.empty())
+	{
+		std::cout << "Function \"" << name << "\" instruction dump:\n";
+		std::cout << Debug::DumpInstructionsData(instructions) << "\n";
+	}
 }
 
 void Function::CreateParameters()
@@ -44,6 +49,11 @@ void Function::Execute()
 void Function::Return(VariableInfo info)
 {
 	static Instruction returnInst{ INSTRUCTION_TYPE_RETURN };
+	if (returnType == DATA_TYPE_VOID)
+	{
+		Interpreter::ExecuteInstructions({ returnInst });
+		return;
+	}
 
 	Instruction assignInst{};
 	assignInst.type = INSTRUCTION_TYPE_ASSIGN;

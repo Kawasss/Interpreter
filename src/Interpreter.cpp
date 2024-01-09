@@ -52,27 +52,27 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 			*FindVariable(instruction.operand1) = *FindVariable(instruction.operand1) * GetValue(instruction.operand2);
 			break;
 		case INSTRUCTION_TYPE_EQUAL:
-			if (*FindVariable(instruction.operand1) == GetValue(instruction.operand2)) // the second instruction only gets executed if the comparison is false
+			if (GetValue(instruction.operand1) == GetValue(instruction.operand2)) // the second instruction only gets executed if the comparison is false
 				instructionPointer++;
 			break;
 		case INSTRUCTION_TYPE_NOT_EQUAL:
-			if (*FindVariable(instruction.operand1) != GetValue(instruction.operand2))
+			if (GetValue(instruction.operand1) != GetValue(instruction.operand2))
 				instructionPointer++;
 			break;
 		case INSTRUCTION_TYPE_GREATER:
-			if (*FindVariable(instruction.operand1) > GetValue(instruction.operand2))
+			if (GetValue(instruction.operand1) > GetValue(instruction.operand2))
 				instructionPointer++;
 			break;
 		case INSTRUCTION_TYPE_LESS:
-			if (*FindVariable(instruction.operand1) < GetValue(instruction.operand2))
+			if (GetValue(instruction.operand1) < GetValue(instruction.operand2))
 				instructionPointer++;
 			break;
 		case INSTRUCTION_TYPE_EQUAL_OR_GREATER:
-			if (*FindVariable(instruction.operand1) >= GetValue(instruction.operand2))
+			if (GetValue(instruction.operand1) >= GetValue(instruction.operand2))
 				instructionPointer++;
 			break;
 		case INSTRUCTION_TYPE_EQUAL_OR_LESS:
-			if (*FindVariable(instruction.operand1) <= GetValue(instruction.operand2))
+			if (GetValue(instruction.operand1) <= GetValue(instruction.operand2))
 				instructionPointer++;
 			break;
 
@@ -81,7 +81,7 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 			Variable var = GetValue(instruction.operand2);
 			*FindVariable(instruction.operand1) = var;// GetValue(instruction.operand2);
 			if (cacheVariables.count(instruction.operand2.name) > 0) // if a cache variable is read from (done being used) it gets reset
-				cacheVariables[instruction.operand2.name] = 0;
+				cacheVariables[instruction.operand2.name] = { instruction.operand2.name, DATA_TYPE_FLOAT };
 			break;
 		}
 
@@ -102,6 +102,8 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 
 		case INSTRUCTION_TYPE_CALL:
 			stack.CreateNewStackFrame(); // add a new, empty stack
+			if (functions.count(instruction.operand1.name) == 0)
+				throw std::runtime_error("Cannot find function " + instruction.operand1.name);
 			functions[instruction.operand1.name]->ExecuteBody();
 			break;
 		case INSTRUCTION_TYPE_RETURN:
@@ -110,6 +112,13 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 
 		case INSTRUCTION_TYPE_JUMP:
 			instructionPointer += (size_t)std::stoi(instruction.operand1.name) - 1;
+			break;
+
+		case INSTRUCTION_TYPE_PUSH_SCOPE:
+			stack.Last().IncrementScope();
+			break;
+		case INSTRUCTION_TYPE_POP_SCOPE:
+			stack.Last().DecrementScope();
 			break;
 
 		case INSTRUCTION_TYPE_INVALID:

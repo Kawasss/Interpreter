@@ -160,3 +160,51 @@ size_t Sizeof(DataType dataType)
 	}
 	return 0;
 }
+
+std::string InstructionTypeToString(InstructionType type)
+{
+	switch (type)
+	{
+	case INSTRUCTION_TYPE_INVALID:           return "INSTRUCTION_TYPE_INVALID";
+	case INSTRUCTION_TYPE_ADD:               return "INSTRUCTION_TYPE_ADD";
+	case INSTRUCTION_TYPE_SUBTRACT:          return "INSTRUCTION_TYPE_SUBTRACT";
+	case INSTRUCTION_TYPE_MULTIPLY:          return "INSTRUCTION_TYPE_MULTIPLY";
+	case INSTRUCTION_TYPE_DIVIDE:            return "INSTRUCTION_TYPE_DIVIDE";
+	case INSTRUCTION_TYPE_ASSIGN:            return "INSTRUCTION_TYPE_ASSIGN";
+	case INSTRUCTION_TYPE_ASSIGN_CONSTANT:   return "INSTRUCTION_TYPE_ASSIGN_CONSTANT";
+	case INSTRUCTION_TYPE_DECLARE:           return "INSTRUCTION_TYPE_DECLARE";
+	case INSTRUCTION_TYPE_CALL:              return "INSTRUCTION_TYPE_CALL";
+	case INSTRUCTION_TYPE_RETURN:            return "INSTRUCTION_TYPE_RETURN";
+	case INSTRUCTION_TYPE_PUSH:              return "INSTRUCTION_TYPE_PUSH";
+	case INSTRUCTION_TYPE_PULL:              return "INSTRUCTION_TYPE_PULL";
+	case INSTRUCTION_TYPE_EQUAL:             return "INSTRUCTION_TYPE_EQUAL";
+	case INSTRUCTION_TYPE_NOT_EQUAL:         return "INSTRUCTION_TYPE_NOT_EQUAL";
+	case INSTRUCTION_TYPE_GREATER:           return "INSTRUCTION_TYPE_GREATER";
+	case INSTRUCTION_TYPE_LESS:              return "INSTRUCTION_TYPE_LESS";
+	case INSTRUCTION_TYPE_EQUAL_OR_GREATER:  return "INSTRUCTION_TYPE_EQUAL_OR_GREATER";
+	case INSTRUCTION_TYPE_EQUAL_OR_LESS:     return "INSTRUCTION_TYPE_EQUAL_OR_LESS";
+	case INSTRUCTION_TYPE_JUMP:              return "INSTRUCTION_TYPE_JUMP";
+	case INSTRUCTION_TYPE_PUSH_SCOPE:        return "INSTRUCTION_TYPE_PUSH_SCOPE";
+	case INSTRUCTION_TYPE_POP_SCOPE:         return "INSTRUCTION_TYPE_POP_SCOPE";
+	}
+	return "";
+}
+
+std::string DataTypeToString(DataType type)
+{
+	switch (type)
+	{
+	case DATA_TYPE_INVALID:         return "DATA_TYPE_INVALID";
+	case DATA_TYPE_FLOAT:           return "DATA_TYPE_FLOAT";
+	case DATA_TYPE_CHAR:            return "DATA_TYPE_CHAR";
+	case DATA_TYPE_INT:             return "DATA_TYPE_INT";
+	case DATA_TYPE_STRING:          return "DATA_TYPE_STRING";
+	case DATA_TYPE_VOID:            return "DATA_TYPE_VOID";
+	case DATA_TYPE_USERTYPE:        return "DATA_TYPE_USERTYPE";
+	case DATA_TYPE_FLOAT_CONSTANT:  return "DATA_TYPE_FLOAT_CONSTANT";
+	case DATA_TYPE_CHAR_CONSTANT:   return "DATA_TYPE_CHAR_CONSTANT";
+	case DATA_TYPE_INT_CONSTANT:    return "DATA_TYPE_INT_CONSTANT";
+	case DATA_TYPE_STRING_CONSTANT: return "DATA_TYPE_STRING_CONSTANT";
+	}
+	return "";
+}

@@ -40,5 +40,9 @@ private:
 	static void GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);
 	static void GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t index, std::vector<Instruction>& ret);
 
+	static void ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
+	static void ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
+	static void ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
+
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
 };

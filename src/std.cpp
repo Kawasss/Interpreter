@@ -15,17 +15,20 @@ WriteLine::WriteLine()
 {
 	name = "WriteLine";
 	parameters = { { "text", DATA_TYPE_FLOAT } };
+	returnType = DATA_TYPE_VOID;
 }
 
 void WriteLine::Execute()
 {
 	std::cout << (std::string)*Interpreter::FindVariable("text") << "\n";
+	Return({});
 }
 
 ToString::ToString()
 {
 	name = "ToString";
 	parameters = { { "value", DATA_TYPE_FLOAT } };
+	returnType = DATA_TYPE_STRING;
 }
 
 void ToString::Execute()
@@ -37,6 +40,7 @@ ToFloat::ToFloat()
 {
 	name = "ToFloat";
 	parameters = { { "text", DATA_TYPE_STRING } };
+	returnType = DATA_TYPE_FLOAT;
 }
 
 void ToFloat::Execute()
@@ -48,6 +52,7 @@ ToInt::ToInt()
 {
 	name = "ToInt";
 	parameters = { { "text", DATA_TYPE_STRING } };
+	returnType = DATA_TYPE_INT;
 }
 
 void ToInt::Execute()
@@ -59,6 +64,7 @@ nameof::nameof()
 {
 	name = "nameof";
 	parameters = { { "var", DATA_TYPE_VOID } };
+	returnType = DATA_TYPE_STRING;
 }
 
 void nameof::Execute()
@@ -70,6 +76,7 @@ typeof::typeof()
 {
 	name = "typeof";
 	parameters = { { "var", DATA_TYPE_VOID } };
+	returnType = DATA_TYPE_STRING;
 }
 
 void typeof::Execute()
@@ -100,6 +107,7 @@ std::string typeof::DataTypeToString(DataType type)
 GetLine::GetLine()
 {
 	name = "GetLine";
+	returnType = DATA_TYPE_STRING_CONSTANT;
 }
 
 void GetLine::Execute()

@@ -30,6 +30,7 @@ enum InstructionType
 	INSTRUCTION_TYPE_PUSH_SCOPE,
 	INSTRUCTION_TYPE_POP_SCOPE
 };
+inline extern std::string InstructionTypeToString(InstructionType type);
 
 enum DataType
 {
@@ -45,6 +46,7 @@ enum DataType
 	DATA_TYPE_INT_CONSTANT,
 	DATA_TYPE_STRING_CONSTANT
 };
+inline extern std::string DataTypeToString(DataType type);
 
 inline extern size_t Sizeof(DataType dataType);
 

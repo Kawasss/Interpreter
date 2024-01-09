@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\common.cpp" />
+    <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\Interpreter.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\Function.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\common.hpp" />
+    <ClInclude Include="src\Debug.hpp" />
     <ClInclude Include="src\Interpreter.hpp" />
     <ClInclude Include="src\Parser.hpp" />
     <ClInclude Include="src\Function.hpp" />

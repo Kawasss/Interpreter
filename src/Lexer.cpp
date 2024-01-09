@@ -8,7 +8,8 @@ std::unordered_map<std::string, LexicalToken> Lexer::stringToLexicalToken =
 	{ "{",      LEXER_TOKEN_SEPERATOR }, { "}",      LEXER_TOKEN_SEPERATOR }, { "(",      LEXER_TOKEN_SEPERATOR }, { ")",      LEXER_TOKEN_SEPERATOR }, { "!=",   LEXER_TOKEN_OPERATOR  },
 	{ "float",  LEXER_TOKEN_DATATYPE  }, { "int",    LEXER_TOKEN_DATATYPE  }, { "char",   LEXER_TOKEN_DATATYPE  }, { "struct", LEXER_TOKEN_DATATYPE  }, { "void", LEXER_TOKEN_DATATYPE  },
 	{ "return", LEXER_TOKEN_KEYWORD   }, { "extern", LEXER_TOKEN_KEYWORD   }, { "string", LEXER_TOKEN_DATATYPE  }, { "import", LEXER_TOKEN_KEYWORD   }, { "if",   LEXER_TOKEN_KEYWORD   },
-	{ "while",  LEXER_TOKEN_KEYWORD   }, { ">",      LEXER_TOKEN_OPERATOR  }, { "<",      LEXER_TOKEN_OPERATOR  }, { ">=",     LEXER_TOKEN_OPERATOR  }, { "<=",   LEXER_TOKEN_OPERATOR  }
+	{ "while",  LEXER_TOKEN_KEYWORD   }, { ">",      LEXER_TOKEN_OPERATOR  }, { "<",      LEXER_TOKEN_OPERATOR  }, { ">=",     LEXER_TOKEN_OPERATOR  }, { "<=",   LEXER_TOKEN_OPERATOR  },
+	{ "for",    LEXER_TOKEN_KEYWORD   }
 };
 
 std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
@@ -20,7 +21,7 @@ std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
 	{ "float",  LEXEME_DATATYPE_FLOAT  }, { "int",    LEXEME_DATATYPE_INT   }, { "char", LEXEME_DATATYPE_CHAR  }, { "struct", LEXEME_STRUCT           }, { "void",   LEXEME_DATATYPE_VOID     },
 	{ ".",      LEXEME_DOT             }, { ",",      LEXEME_COMMA          }, { "\n",   LEXEME_NEWLINE        }, { "return", LEXEME_RETURN           }, { "extern", LEXEME_EXTERN            },
 	{ "string", LEXEME_DATATYPE_STRING }, { "import", LEXEME_IMPORT         }, { "if",   LEXEME_IF             }, { "while",  LEXEME_WHILE            }, { ">",      LEXEME_GREATER           }, 
-	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }
+	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }, { "for",    LEXEME_FOR              }
 };
 
 std::vector<Lexer::Token> Lexer::LexInput(std::string input)
