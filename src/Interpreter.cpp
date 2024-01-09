@@ -133,6 +133,7 @@ inline Variable GetConstantTypeAsVariable(VariableInfo& info)
 	case DATA_TYPE_FLOAT_CONSTANT: return std::stof(info.name);
 	case DATA_TYPE_INT_CONSTANT:   return std::stoi(info.name);
 	}
+	return 0;
 }
 
 Variable Interpreter::GetValue(VariableInfo& info)

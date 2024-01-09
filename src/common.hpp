@@ -27,6 +27,8 @@ enum InstructionType
 	INSTRUCTION_TYPE_EQUAL_OR_GREATER,
 	INSTRUCTION_TYPE_EQUAL_OR_LESS,
 	INSTRUCTION_TYPE_JUMP, // jump is relative to the current instruction index
+	INSTRUCTION_TYPE_PUSH_SCOPE,
+	INSTRUCTION_TYPE_POP_SCOPE
 };
 
 enum DataType

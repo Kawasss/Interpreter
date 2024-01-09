@@ -124,7 +124,7 @@ std::vector<FunctionInfo> Parser::GetAllFunctionInfos(std::vector<Lexer::Token>&
 
 inline std::vector<Lexer::Token> GetTokensInsideParentheses(std::vector<Lexer::Token>& tokens, size_t& index)
 {
-	int parenReferenceCount = 0, beginIndex = index;
+	size_t parenReferenceCount = 0, beginIndex = index;
 	for (; index < tokens.size(); index++)
 	{
 		if (tokens[index].lexeme == LEXEME_OPEN_PARENTHESIS)
@@ -318,7 +318,7 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 				if (tokens[scopeIndex][i + 2].lexeme == LEXEME_ENDLINE) // declaring without a value has a ; at the third token
 					break;
 
-				int indexOfEndLine = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
+				size_t indexOfEndLine = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
 				std::vector<Lexer::Token> rvalueTokens = { tokens[scopeIndex].begin() + i + 3, tokens[scopeIndex].begin() + indexOfEndLine };
 				GetInstructionsFromRValue(rvalueTokens, ret, declVar);
 				i = indexOfEndLine;
@@ -329,7 +329,7 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 			{
 				if (tokens[scopeIndex][i].content.back() != '=')
 					break;
-				int endIndex = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
+				size_t endIndex = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
 
 				std::vector<Lexer::Token> lvalue = { tokens[scopeIndex].begin(), tokens[scopeIndex].begin() + i };
 				std::vector<Lexer::Token> rvalue = { tokens[scopeIndex].begin() + i + 1, tokens[scopeIndex].begin() + endIndex };
@@ -415,8 +415,8 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 
 void Parser::GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t index, std::vector<Instruction>& ret)
 {
-	int conditionMid = GetNextInstanceOfLexicalToken(LEXER_TOKEN_OPERATOR, index, tokens);
-	int conditionEnd = GetNextInstanceOfLexeme(LEXEME_CLOSE_PARENTHESIS, index, tokens);
+	size_t conditionMid = GetNextInstanceOfLexicalToken(LEXER_TOKEN_OPERATOR, index, tokens);
+	size_t conditionEnd = GetNextInstanceOfLexeme(LEXEME_CLOSE_PARENTHESIS, index, tokens);
 
 	Instruction compareInst{};
 	compareInst.type = GetInstructionTypeFromLexemeOperator(tokens[conditionMid].lexeme);
@@ -480,7 +480,7 @@ std::vector<std::vector<Lexer::Token>> Parser::DivideByEndLine(std::vector<Lexer
 inline void GetScopesRecursive(std::vector<Lexer::Token>& tokens, int& index, FunctionBody& ret)
 {
 	ret.push_back({});
-	int assigningIndex = ret.size() - 1;
+	size_t assigningIndex = ret.size() - 1;
 	for (; index < tokens.size(); index++)
 	{
 		switch (tokens[index].lexeme)

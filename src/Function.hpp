@@ -8,7 +8,7 @@ struct FunctionInfo
 	std::string name;
 	std::vector<VariableInfo> parameters;
 	std::vector<Instruction> instructions;
-	DataType returnType;
+	DataType returnType = DATA_TYPE_VOID;
 };
 
 class Function
