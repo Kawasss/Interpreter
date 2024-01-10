@@ -26,7 +26,6 @@ class Interpreter
 public:
 	static void Init();
 	static void SetAST(AbstractSyntaxTree& ast);
-	static void SetExternFunction(Function* function);
 
 	static bool ExecuteInstructions(const std::vector<Instruction> instructions); // copying isnt the best move
 	static Variable* FindVariable(std::string name);
@@ -36,6 +35,14 @@ public:
 	static void DeclareBuffer(std::string name);
 
 	static void CopyLocalVariableToStackFrame(std::string sourceName, std::string newName, StackFrame* destination);
+
+	template<typename T> static void SetExternFunction(std::string name)
+	{
+		Function* oldFunc = functions[name];
+		Function* newFunc = new T(oldFunc);
+		functions[name] = newFunc;
+		//delete oldFunc; // cant delete cause assert fails?
+	}
 
 	template<typename T> static T FindVariable(VariableInfo& info)
 	{

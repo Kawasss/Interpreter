@@ -4,12 +4,21 @@
 #include "Interpreter.hpp"
 #include "Debug.hpp"
 
+Function::Function(Function* function)
+{
+	this->name = function->name;
+	this->parameters = function->parameters;
+	this->returnType = function->returnType;
+	this->instructions = function->instructions;
+}
+
 Function::Function(FunctionInfo& info)
 {
 	this->name = info.name;
 	this->parameters = info.parameters;
 	this->returnType = info.returnType;
 	this->instructions = info.instructions;
+	CreateParameters();
 	if (!instructions.empty())
 	{
 		std::cout << "Function \"" << name << "\" instruction dump:\n";
@@ -19,7 +28,7 @@ Function::Function(FunctionInfo& info)
 
 void Function::CreateParameters()
 {
-	for (int i = 0; i < parameters.size(); i++)
+	for (int i = parameters.size() - 1; i >= 0; i--)
 	{
 		Instruction declInst{};
 		declInst.type = INSTRUCTION_TYPE_DECLARE;
@@ -30,20 +39,15 @@ void Function::CreateParameters()
 		pullInst.operand1 = bufferParametersVar;
 		pullInst.operand2 = parameters[i];
 
-		Interpreter::ExecuteInstructions({ declInst, pullInst });
+		instructions.insert(instructions.begin(), { declInst, pullInst });
 	}
 }
 
 void Function::ExecuteBody()
 {
-	CreateParameters();
-	Execute();
-}
-
-void Function::Execute()
-{
 	if (!Interpreter::ExecuteInstructions(instructions))
 		throw std::runtime_error("Failed to execute an instruction");
+	Execute();
 }
 
 void Function::Return(VariableInfo info)

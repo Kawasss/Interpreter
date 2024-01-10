@@ -76,6 +76,13 @@ Variable operator*(Variable lvalue, const Variable& rvalue)
 	return lvalue;
 }
 
+std::string Variable::operator[](size_t index)
+{
+	if (type != DATA_TYPE_STRING && type != DATA_TYPE_STRING_CONSTANT)
+		throw std::runtime_error("Cannot index this type: only strings can be indexed");
+	return std::string{ str[index] };
+}
+
 bool operator<(const Variable& lvalue, const Variable& rvalue)
 {
 	return lvalue.data < rvalue.data;
@@ -186,6 +193,7 @@ std::string InstructionTypeToString(InstructionType type)
 	case INSTRUCTION_TYPE_JUMP:              return "INSTRUCTION_TYPE_JUMP";
 	case INSTRUCTION_TYPE_PUSH_SCOPE:        return "INSTRUCTION_TYPE_PUSH_SCOPE";
 	case INSTRUCTION_TYPE_POP_SCOPE:         return "INSTRUCTION_TYPE_POP_SCOPE";
+	case INSTRUCTION_TYPE_INDEX:             return "INSTRUCTION_TYPE_INDEX";
 	}
 	return "";
 }

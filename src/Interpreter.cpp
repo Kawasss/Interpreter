@@ -27,11 +27,6 @@ void Interpreter::SetAST(AbstractSyntaxTree& ast)
 	}
 }
 
-void Interpreter::SetExternFunction(Function* function)
-{
-	functions[function->GetName()] = function;
-}
-
 bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 {
 	for (size_t instructionPointer = 0; instructionPointer < instructions.size(); instructionPointer++)
@@ -102,7 +97,7 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 
 		case INSTRUCTION_TYPE_CALL:
 			stack.CreateNewStackFrame(); // add a new, empty stack
-			if (functions.count(instruction.operand1.name) == 0)
+			if (functions.count(instruction.operand1.name) <= 0)
 				throw std::runtime_error("Cannot find function " + instruction.operand1.name);
 			functions[instruction.operand1.name]->ExecuteBody();
 			break;

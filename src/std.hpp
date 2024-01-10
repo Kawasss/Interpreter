@@ -11,28 +11,28 @@ namespace StandardLib
 class WriteLine : public Function
 {
 public:
-	WriteLine();
+	WriteLine(Function* function);
 	void Execute() override;
 };
 
 class ToString : public Function
 {
 public:
-	ToString();
+	ToString(Function* function);
 	void Execute() override;
 };
 
 class nameof : public Function
 {
 public:
-	nameof();
+	nameof(Function* function);
 	void Execute() override;
 };
 
 class typeof : public Function
 {
 public:
-	typeof();
+	typeof(Function* function);
 	void Execute() override;
 
 private:
@@ -42,20 +42,27 @@ private:
 class GetLine : public Function
 {
 public:
-	GetLine();
+	GetLine(Function* function);
 	void Execute() override;
 };
 
 class ToFloat : public Function
 {
 public:
-	ToFloat();
+	ToFloat(Function* function);
 	void Execute() override;
 };
 
 class ToInt : public Function
 {
 public:
-	ToInt();
+	ToInt(Function* function);
+	void Execute() override;
+};
+
+class IndexString : public Function
+{
+public:
+	IndexString(Function* function);
 	void Execute() override;
 };

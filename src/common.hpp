@@ -28,7 +28,8 @@ enum InstructionType
 	INSTRUCTION_TYPE_EQUAL_OR_LESS,
 	INSTRUCTION_TYPE_JUMP, // jump is relative to the current instruction index
 	INSTRUCTION_TYPE_PUSH_SCOPE,
-	INSTRUCTION_TYPE_POP_SCOPE
+	INSTRUCTION_TYPE_POP_SCOPE,
+	INSTRUCTION_TYPE_INDEX
 };
 inline extern std::string InstructionTypeToString(InstructionType type);
 
@@ -80,6 +81,8 @@ struct Variable
 	Variable& operator-=(const Variable& rvalue);
 	Variable& operator*=(const Variable& rvalue);
 	Variable& operator/=(const Variable& rvalue);
+
+	std::string operator[](size_t index);
 
 	extern friend Variable operator+(Variable lvalue, const Variable& rvalue);
 	extern friend Variable operator-(Variable lvalue, const Variable& rvalue);

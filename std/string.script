@@ -1,0 +1,12 @@
+extern string IndexString(string input, int index);
+
+string IndexStringRange(string input, int begin, int end)
+{
+	string ret;
+	for (int i = begin; i < end; i += 1)
+	{
+		string character = IndexString(input, i);
+		ret = ret + character;
+	}
+	return ret;
+}

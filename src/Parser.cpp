@@ -344,8 +344,8 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 				std::vector<Lexer::Token> rvalue = { tokens[scopeIndex].begin() + i + 1, tokens[scopeIndex].begin() + endIndex };
 
 				VariableInfo assignVar = GetAssignVariableInfo(lvalue);
-				GetInstructionsFromRValue(rvalue, ret, assignVar);
-				ret.back().type = GetInstructionTypeFromLexemeOperator(tokens[scopeIndex][i].lexeme);
+				GetInstructionsFromRValue(rvalue, ret, floatCalculationVar);
+				GetInstructionsForLexemeEqualsOperator(tokens[scopeIndex][i].lexeme, assignVar, ret);
 				i = endIndex;
 				break;
 			}
@@ -392,6 +392,64 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 		}
 		if (scopeIndex == 0 && ret.back().type != INSTRUCTION_TYPE_RETURN)
 			ret.push_back({ INSTRUCTION_TYPE_RETURN });
+	}
+}
+
+void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& info, std::vector<Instruction>& instructions)
+{
+	switch (op)
+	{
+	case LEXEME_EQUALS:
+	{
+		Instruction assignInst{};
+		assignInst.type = INSTRUCTION_TYPE_ASSIGN;
+		assignInst.operand1 = info;
+		assignInst.operand2 = floatCalculationVar;
+
+		instructions.push_back(assignInst);
+		break;
+	}
+
+	case LEXEME_PLUSEQUALS: // can be done better by having a map / function that takes for example PLUSEQUALS and returns PLUS
+	{
+		Instruction addInst{};
+		addInst.type = INSTRUCTION_TYPE_ADD;
+		addInst.operand1 = info;
+		addInst.operand2 = floatCalculationVar;
+
+		instructions.push_back(addInst);
+		break;
+	}
+	case LEXEME_MINUSEQUALS:
+	{
+		Instruction inst{};
+		inst.type = INSTRUCTION_TYPE_SUBTRACT;
+		inst.operand1 = info;
+		inst.operand2 = floatCalculationVar;
+
+		instructions.push_back(inst);
+		break;
+	}
+	case LEXEME_MULTIPLYEQUALS:
+	{
+		Instruction inst{};
+		inst.type = INSTRUCTION_TYPE_MULTIPLY;
+		inst.operand1 = info;
+		inst.operand2 = floatCalculationVar;
+
+		instructions.push_back(inst);
+		break;
+	}
+	case LEXEME_DIVIDEEQUALS:
+	{
+		Instruction inst{};
+		inst.type = INSTRUCTION_TYPE_DIVIDE;
+		inst.operand1 = info;
+		inst.operand2 = floatCalculationVar;
+
+		instructions.push_back(inst);
+		break;
+	}
 	}
 }
 

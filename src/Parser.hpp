@@ -44,5 +44,7 @@ private:
 	static void ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 
+	static void GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);
+
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
 };

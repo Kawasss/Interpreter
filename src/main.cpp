@@ -70,5 +70,8 @@ int main(int argsc, const char** argsv)
 		std::cerr << ex.what() << std::endl;
 	}
 
+	int waiting;
+	std::cin >> waiting;
+
 	return 0;
 }

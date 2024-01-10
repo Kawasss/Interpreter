@@ -1,5 +1,17 @@
 import "std/io.script"
 import "std/types.script"
+import "std/string.script"
+
+int Factorial(int value)
+{
+    int ret = 0;
+    while (value != 0)
+    {
+        ret = ret * value;
+        value = value - 1;
+    }
+    return ret;
+}
 
 void PrintFibonacciSequence(int amount)
 {
@@ -7,7 +19,7 @@ void PrintFibonacciSequence(int amount)
     int y = 1;
     int z;
 
-    for (int i = 0; i < amount; i = i + 1)
+    for (int i = 0; i < amount; i += 1)
     {
         WriteLine(ToString(x));
 
@@ -19,7 +31,6 @@ void PrintFibonacciSequence(int amount)
 
 void main()
 {
-    WriteLine("How many Fibonacci numbers should be calculated?");
-    int amount = ToInt(GetLine());
-    PrintFibonacciSequence(amount);
+    string range = IndexStringRange("this is a long string", 1, 6);
+    WriteLine(range);
 }

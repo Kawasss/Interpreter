@@ -15,6 +15,7 @@ class Function
 {
 public:
 	Function() = default;
+	Function(Function* function);
 	Function(FunctionInfo& info);
 	~Function() {}
 
@@ -23,7 +24,7 @@ public:
 	std::string GetName();
 
 protected:
-	virtual void Execute();
+	virtual void Execute() {}
 	void Return(VariableInfo info);
 	std::string name = "";
 	std::vector<VariableInfo> parameters;

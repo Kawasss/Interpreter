@@ -91,5 +91,8 @@
     <None Include="std\types.script">
       <Filter>misc.</Filter>
     </None>
+    <None Include="std\string.script">
+      <Filter>misc.</Filter>
+    </None>
   </ItemGroup>
 </Project>
