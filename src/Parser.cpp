@@ -3,8 +3,7 @@
 #include "Parser.hpp"
 #include "Interpreter.hpp"
 
-size_t Parser::sizeOfNextScope = 0;
-
+StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
 
 inline size_t GetNextInstanceOfLexeme(Lexeme lexeme, size_t index, std::vector<Lexer::Token>& tokens)
@@ -107,6 +106,8 @@ std::vector<FunctionInfo> Parser::GetAllFunctionInfos(std::vector<Lexer::Token>&
 				isExtern = false;
 				break;
 			}
+			for (int j = 0; j < functionInfo.parameters.size(); j++)
+				simulationStackFrame.Allocate(functionInfo.parameters[j]);
 
 			size_t cBracketIndex = GetIndexOfClosingCBracket(cParenIndex + 1, tokens);
 			std::vector<Lexer::Token> bodyTokens = { tokens.begin() + cParenIndex + 2, tokens.begin() + cBracketIndex };
@@ -116,6 +117,7 @@ std::vector<FunctionInfo> Parser::GetAllFunctionInfos(std::vector<Lexer::Token>&
 
 			ret.push_back(functionInfo);
 			functionInfos[functionInfo.name] = functionInfo;
+			simulationStackFrame.Clear();
 			break;
 		}
 	}
@@ -220,7 +222,10 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 		{
 			if (functionInfos.count(tokens[i].content) <= 0)
 			{
-				final.operand2.dataType = DATA_TYPE_VOID; // cant get variable types from here
+				if (!simulationStackFrame.Has(tokens[i].content))
+					throw std::runtime_error("Syntax error: identifier \"" + tokens[i].content + "\" is undefined");
+
+				final.operand2.dataType = simulationStackFrame.GetVariable(tokens[i].content).GetDataType();
 				final.operand2.name = tokens[i].content;
 				destination.push_back(final);
 				final = { INSTRUCTION_TYPE_ASSIGN, floatCalculationVar };
@@ -233,7 +238,7 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 
 			Instruction callInst{};
 			callInst.type = INSTRUCTION_TYPE_CALL;
-			callInst.operand1 = { functionName, DATA_TYPE_VOID };
+			callInst.operand1 = { functionName, functionInfos[functionName].returnType };
 			destination.push_back(callInst);
 
 			final.operand2 = floatReturnVar;
@@ -260,7 +265,7 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 
 VariableInfo Parser::GetAssignVariableInfo(std::vector<Lexer::Token>& lvalue)
 {
-	return { lvalue.back().content, DATA_TYPE_VOID }; // this should get the proper variable for the assign instruction, but this works for now
+	return { lvalue.back().content, simulationStackFrame[lvalue.back().content].GetDataType() };
 }
 
 std::vector<Instruction> Parser::GetDefinitionInstructions(VariableInfo& info, VariableInfo& startValue)
@@ -320,6 +325,8 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 				declareInst.type = INSTRUCTION_TYPE_DECLARE;
 				declareInst.operand1 = declVar;
 				ret.push_back(declareInst);
+
+				simulationStackFrame.Allocate(declVar); // the functions stack frame gets simulated here in order to check for out of scope references etc. to prevent runtime errors
 
 				if (tokens[scopeIndex][i + 2].lexeme == LEXEME_ENDLINE) // declaring without a value has a ; at the third token
 					break;
@@ -385,7 +392,7 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 
 				Instruction callInst{};
 				callInst.type = INSTRUCTION_TYPE_CALL;
-				callInst.operand1 = { functionName, DATA_TYPE_VOID };
+				callInst.operand1 = { functionName, functionInfos[functionName].returnType };
 				ret.push_back(callInst);
 				break;
 			}
@@ -393,10 +400,19 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 		if (scopeIndex == 0 && ret.back().type != INSTRUCTION_TYPE_RETURN)
 			ret.push_back({ INSTRUCTION_TYPE_RETURN });
 	}
+	for (size_t i = 0; i < ret.size(); i++) // lazily check all instructions (not the fastest)
+		CheckInstructionIntegrity(ret[i]);
 }
 
 void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& info, std::vector<Instruction>& instructions)
 {
+	VariableInfo varToReadFrom = floatCalculationVar;
+	if (instructions.back().type == INSTRUCTION_TYPE_ASSIGN && instructions.back().operand1.name == varToReadFrom.name)
+	{
+		varToReadFrom = instructions.back().operand2;
+		instructions.pop_back();
+	}
+	CheckOperationIntegrity(op, info, varToReadFrom);
 	switch (op)
 	{
 	case LEXEME_EQUALS:
@@ -404,7 +420,7 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		Instruction assignInst{};
 		assignInst.type = INSTRUCTION_TYPE_ASSIGN;
 		assignInst.operand1 = info;
-		assignInst.operand2 = floatCalculationVar;
+		assignInst.operand2 = varToReadFrom;
 
 		instructions.push_back(assignInst);
 		break;
@@ -415,7 +431,7 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		Instruction addInst{};
 		addInst.type = INSTRUCTION_TYPE_ADD;
 		addInst.operand1 = info;
-		addInst.operand2 = floatCalculationVar;
+		addInst.operand2 = varToReadFrom;
 
 		instructions.push_back(addInst);
 		break;
@@ -425,7 +441,7 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_SUBTRACT;
 		inst.operand1 = info;
-		inst.operand2 = floatCalculationVar;
+		inst.operand2 = varToReadFrom;
 
 		instructions.push_back(inst);
 		break;
@@ -435,7 +451,7 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_MULTIPLY;
 		inst.operand1 = info;
-		inst.operand2 = floatCalculationVar;
+		inst.operand2 = varToReadFrom;
 
 		instructions.push_back(inst);
 		break;
@@ -445,7 +461,7 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_DIVIDE;
 		inst.operand1 = info;
-		inst.operand2 = floatCalculationVar;
+		inst.operand2 = varToReadFrom;
 
 		instructions.push_back(inst);
 		break;
@@ -466,6 +482,8 @@ void Parser::ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, 
 	pushScopeInst.type = INSTRUCTION_TYPE_PUSH_SCOPE;
 	ret.push_back(pushScopeInst);
 
+	simulationStackFrame.IncrementScope();
+
 	scopesTraversed++;
 	ParseTokens(tokens, ret, scopesTraversed);
 	scopesTraversed--;
@@ -473,6 +491,8 @@ void Parser::ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, 
 	Instruction popScopeInst{};
 	popScopeInst.type = INSTRUCTION_TYPE_POP_SCOPE;
 	ret.push_back(popScopeInst);
+
+	simulationStackFrame.DecrementScope();
 
 	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT_CONSTANT };
 	for (; i < tokens[scopeIndex].size(); i++)
@@ -589,12 +609,12 @@ void Parser::GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t 
 	if (lvalue.size() > 1)
 		GetInstructionsFromRValue(lvalue, ret, leftBoolValue);
 	else
-		compareInst.operand1 = { lvalue[0].content, lvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(lvalue[0].lexeme) : DATA_TYPE_VOID };
+		compareInst.operand1 = { lvalue[0].content, lvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(lvalue[0].lexeme) : simulationStackFrame[lvalue[0].content].GetDataType() };
 
 	if (rvalue.size() > 1)
 		GetInstructionsFromRValue(rvalue, ret, rightBoolValue);
 	else
-		compareInst.operand2 = { rvalue[0].content, rvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(rvalue[0].lexeme) : DATA_TYPE_VOID };
+		compareInst.operand2 = { rvalue[0].content, rvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(rvalue[0].lexeme) : simulationStackFrame[lvalue[0].content].GetDataType() };
 	ret.push_back(compareInst);
 }
 
@@ -673,6 +693,7 @@ AbstractSyntaxTree Parser::CreateAST(std::vector<Lexer::Token>& tokens)
 	AbstractSyntaxTree ret{};
 	if (tokens.empty())
 		return ret;
+	CheckOpenCloseIntegrityPremature(tokens);
 
 	std::vector<FunctionInfo> infos = GetAllFunctionInfos(tokens);
 	for (FunctionInfo info : infos)
@@ -744,9 +765,112 @@ FunctionInfo Parser::GetFunctionInfoFromTokens(std::vector<Lexer::Token>& tokens
 	return ret;
 }
 
+inline bool IsOperatorBinary(Lexeme op)
+{
+	switch (op)
+	{
+	case LEXEME_PLUS:
+	case LEXEME_PLUSEQUALS:
+	case LEXEME_MINUS:
+	case LEXEME_MINUSEQUALS:
+	case LEXEME_MULTIPLY:
+	case LEXEME_MULTIPLYEQUALS:
+	case LEXEME_DIVIDE:
+	case LEXEME_DIVIDEEQUALS:
+		return true;
+	}
+	return false;
+}
+
+void Parser::CheckOpenCloseIntegrityPremature(const std::vector<Lexer::Token>& tokens)
+{
+	size_t closeParenCount = 0, openParenCount = 0;
+	size_t closeCBracketCount = 0, openCBracketCount = 0;
+	size_t closeSBracketCount = 0, openSBracketCount = 0;
+
+	for (size_t i = 0; i < tokens.size(); i++)
+	{
+		switch (tokens[i].lexeme)
+		{
+		case LEXEME_CLOSE_PARENTHESIS:
+			closeParenCount++;
+			break;
+		case LEXEME_OPEN_PARENTHESIS:
+			openParenCount++;
+			break;
+		case LEXEME_CLOSE_CBRACKET:
+			closeCBracketCount++;
+			break;
+		case LEXEME_OPEN_CBRACKET:
+			openCBracketCount++;
+			break;
+		case LEXEME_CLOSE_SBRACKET:
+			closeSBracketCount++;
+			break;
+		case LEXEME_OPEN_SBRACKET:
+			openSBracketCount++;
+			break;
+		}
+	}
+	if (closeParenCount != openParenCount)
+		throw std::runtime_error("Syntax error: the count of '(' and ')' is not equal");
+	if (closeCBracketCount != openCBracketCount)
+		throw std::runtime_error("Syntax error: the count of '{' and '}' is not equal");
+	if (closeSBracketCount != openSBracketCount)
+		throw std::runtime_error("Syntax error: the count of '[' and ']' is not equal");
+}
+
+inline bool OneVariableIsString(const VariableInfo& lvalue, const VariableInfo& rvalue)
+{
+	return (DataTypeIsString(lvalue.dataType) && !DataTypeIsString(rvalue.dataType)) || (!DataTypeIsString(lvalue.dataType) && DataTypeIsString(rvalue.dataType));
+}
+
+void Parser::CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue)
+{
+	if (lvalue.dataType == LEXEME_DATATYPE_VOID || rvalue.dataType == DATA_TYPE_VOID || op == LEXEME_INVALID)
+		return; // voids cannot be checked
+
+	if (OneVariableIsString(lvalue, rvalue)) // no operator can be used if one is a string and the other is not (regardless of order)
+		throw std::runtime_error("Syntax error: cannot use a non-string value with a string");
+
+	if (op == LEXEME_EQUALS)
+		return;
+
+	if ((op == LEXEME_PLUS || op == LEXEME_PLUSEQUALS) && OneVariableIsString(lvalue, rvalue)) // strings can only be added to each other if both vars are a string
+		throw std::runtime_error("Syntax error: cannot add a non-string value to a string");
+	if (IsOperatorBinary(op) && (op != LEXEME_PLUS && op != LEXEME_PLUSEQUALS) && (DataTypeIsString(lvalue.dataType) || DataTypeIsString(rvalue.dataType))) // the only valid binary operator for strings is '+(=)'
+		throw std::runtime_error("Syntax error: cannot use current operator, it is not valid for strings");
+
+	if (lvalue.dataType == DATA_TYPE_USERTYPE || rvalue.dataType == DATA_TYPE_USERTYPE)
+		throw std::runtime_error("Syntax error: operators cannot be used on user types");
+}
+
+void Parser::CheckInstructionIntegrity(const Instruction& instruction)
+{
+	const Lexeme op = InstructionTypeToLexemeOperator(instruction.type);
+	CheckOperationIntegrity(op, instruction.operand1, instruction.operand2);
+}
+
 bool Parser::IsFunctionDeclaration(std::vector<Lexer::Token>& tokens)
 {
 	if (tokens.size() < 4)
 		return false;
 	return tokens[0].token == LEXER_TOKEN_DATATYPE && tokens[1].token == LEXER_TOKEN_IDENTIFIER && tokens[2].lexeme == LEXEME_OPEN_PARENTHESIS && tokens.back().lexeme == LEXEME_CLOSE_PARENTHESIS;
+}
+
+Lexeme Parser::InstructionTypeToLexemeOperator(InstructionType type)
+{
+	switch (type)
+	{
+	case INSTRUCTION_TYPE_ADD:              return LEXEME_PLUS;
+	case INSTRUCTION_TYPE_SUBTRACT:         return LEXEME_MINUS;
+	case INSTRUCTION_TYPE_MULTIPLY:         return LEXEME_MULTIPLY;
+	case INSTRUCTION_TYPE_DIVIDE:           return LEXEME_DIVIDE;
+	case INSTRUCTION_TYPE_EQUAL_OR_GREATER: return LEXEME_IS_OR_GREATER;
+	case INSTRUCTION_TYPE_EQUAL:            return LEXEME_IS;
+	case INSTRUCTION_TYPE_NOT_EQUAL:        return LEXEME_ISNOT;
+	case INSTRUCTION_TYPE_EQUAL_OR_LESS:    return LEXEME_IS_OR_LESS;
+	case INSTRUCTION_TYPE_LESS:             return LEXEME_LESS;
+	}
+	return LEXEME_INVALID;
 }

@@ -18,10 +18,10 @@ void PrintFibonacciSequence(int amount)
     int x;
     int y = 1;
     int z;
-
+    
     for (int i = 0; i < amount; i += 1)
     {
-        WriteLine(ToString(x));
+        WriteLine(x);
 
         z = x + y;
         x = y;
@@ -31,6 +31,5 @@ void PrintFibonacciSequence(int amount)
 
 void main()
 {
-    string range = IndexStringRange("this is a long string", 1, 6); #this is commentary
-    WriteLine(range);
+    PrintFibonacciSequence(20);
 }

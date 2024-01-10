@@ -152,9 +152,8 @@ Variable* Interpreter::FindVariable(std::string name)
 	if (cacheVariables.count(name) > 0)
 		return &cacheVariables[name];
 
-	for (int i = 0; i < stack.Size(); i++)
-		if (stack[i].Has(name))
-			return &stack[i].GetVariable(name);
+	if (stack.Last().Has(name))
+		return &stack.Last().GetVariable(name);
 
 	throw std::runtime_error("Failed to find variable " + name);
 }

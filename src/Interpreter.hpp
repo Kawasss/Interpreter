@@ -7,12 +7,12 @@
 class Function;
 struct AbstractSyntaxTree;
 
-const VariableInfo leftBoolValue =       { "%lbv", DATA_TYPE_INT   };
-const VariableInfo rightBoolValue =      { "%rbv", DATA_TYPE_INT   };
-const VariableInfo floatStorageVar =     { "%fsv", DATA_TYPE_FLOAT };
-const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_FLOAT };
-const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_FLOAT };
-const VariableInfo bufferParametersVar = { "%bpv", DATA_TYPE_VOID  };
+const VariableInfo leftBoolValue =       { "%lbv", DATA_TYPE_INT  };
+const VariableInfo rightBoolValue =      { "%rbv", DATA_TYPE_INT  };
+const VariableInfo floatStorageVar =     { "%fsv", DATA_TYPE_VOID };
+const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_VOID };
+const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_VOID };
+const VariableInfo bufferParametersVar = { "%bpv", DATA_TYPE_VOID };
 
 enum InterpreterFlags
 {

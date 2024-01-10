@@ -1,9 +1,9 @@
 #pragma once
 #include <unordered_set>
-#include <optional>
 #include "common.hpp"
 #include "Lexer.hpp"
 #include "Function.hpp"
+#include "StackFrame.hpp"
 
 typedef std::vector<std::vector<Lexer::Token>> FunctionBody;
 
@@ -30,8 +30,6 @@ public:
 	static bool IsFunctionDeclaration(std::vector<Lexer::Token>& tokens);
 
 private:
-	static size_t sizeOfNextScope; // hack
-
 	static std::vector<std::vector<Lexer::Token>> DivideByEndLine(std::vector<Lexer::Token>& tokens);
 	static FunctionBody GetAllScopesFromBody(std::vector<Lexer::Token>& tokens);
 
@@ -46,5 +44,11 @@ private:
 
 	static void GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);
 
+	static void CheckOpenCloseIntegrityPremature(const std::vector<Lexer::Token>& tokens);
+	static void CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue);
+	static void CheckInstructionIntegrity(const Instruction& instruction);
+	static Lexeme InstructionTypeToLexemeOperator(InstructionType type);
+
+	static StackFrame simulationStackFrame;
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
 };

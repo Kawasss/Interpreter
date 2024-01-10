@@ -48,10 +48,14 @@ enum DataType
 	DATA_TYPE_STRING_CONSTANT
 };
 inline extern std::string DataTypeToString(DataType type);
+inline extern bool DataTypeIsFloat(DataType type);
+inline extern bool DataTypeIsChar(DataType type);
+inline extern bool DataTypeIsInt(DataType type);
+inline extern bool DataTypeIsString(DataType type);
 
 inline extern size_t Sizeof(DataType dataType);
 
-template<typename T> inline DataType GetDataType()
+template<typename T> inline DataType GetDataTypeTemplate()
 {
 	if (std::is_same_v<T, float>)
 		return DATA_TYPE_FLOAT;
@@ -99,7 +103,7 @@ struct Variable
 
 	template<typename T> Variable(T rvalue)
 	{
-		type = GetDataType<T>();
+		type = GetDataTypeTemplate<T>();
 		size = sizeof(T);
 		str = "";
 		if (std::is_same_v<T, std::string>)
@@ -129,6 +133,7 @@ struct Variable
 	DataType type = DATA_TYPE_INVALID;
 
 	std::string AsString();
+	DataType GetDataType();
 
 private:
 	size_t size = 0;

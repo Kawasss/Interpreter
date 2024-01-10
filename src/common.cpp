@@ -157,6 +157,31 @@ std::string Variable::AsString()
 	return "Cannot convert variable to string";
 }
 
+DataType Variable::GetDataType()
+{
+	return type;
+}
+
+bool DataTypeIsFloat(DataType type)
+{
+	return type == DATA_TYPE_FLOAT || type == DATA_TYPE_FLOAT_CONSTANT;
+}
+
+bool DataTypeIsChar(DataType type)
+{
+	return type == DATA_TYPE_CHAR || type == DATA_TYPE_CHAR_CONSTANT;
+}
+
+bool DataTypeIsInt(DataType type)
+{
+	return type == DATA_TYPE_INT || type == DATA_TYPE_INT_CONSTANT;
+}
+
+bool DataTypeIsString(DataType type)
+{
+	return type == DATA_TYPE_STRING || type == DATA_TYPE_STRING_CONSTANT;
+}
+
 size_t Sizeof(DataType dataType)
 {
 	switch (dataType)
