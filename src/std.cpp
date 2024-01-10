@@ -1,18 +1,34 @@
 #include "std.hpp"
+#include "Interpreter.hpp"
 
 #define SET_EXTERN_FUNCTION(name) Interpreter::SetExternFunction<##name##>(#name);
 
 void StandardLib::Init()
 {
-	SET_EXTERN_FUNCTION(WriteLine);
-	SET_EXTERN_FUNCTION(GetLine);
-	SET_EXTERN_FUNCTION(ToString);
-	SET_EXTERN_FUNCTION(ToFloat);
-	SET_EXTERN_FUNCTION(ToInt);
-	SET_EXTERN_FUNCTION(ToString);
-	//SET_EXTERN_FUNCTION(IndexString);
-	//SET_EXTERN_FUNCTION(nameof);
-	//SET_EXTERN_FUNCTION(typeof);
+	for (std::string file : importedFiles)
+	{
+		if (file == "std/io.script")
+		{
+			SET_EXTERN_FUNCTION(WriteLine);
+			SET_EXTERN_FUNCTION(GetLine);
+		}
+		if (file == "std/types.script")
+		{
+			SET_EXTERN_FUNCTION(ToString);
+			SET_EXTERN_FUNCTION(ToFloat);
+			SET_EXTERN_FUNCTION(ToInt);
+			SET_EXTERN_FUNCTION(ToString);
+		}
+		if (file == "std/string.script")
+		{
+			SET_EXTERN_FUNCTION(IndexString);
+		}
+		if (file == "std/reflection.script")
+		{
+			SET_EXTERN_FUNCTION(nameof);
+			SET_EXTERN_FUNCTION(typeof);
+		}
+	}
 }
 
 WriteLine::WriteLine(Function* function) : Function(function)

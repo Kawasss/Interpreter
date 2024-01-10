@@ -113,6 +113,7 @@ std::vector<FunctionInfo> Parser::GetAllFunctionInfos(std::vector<Lexer::Token>&
 			std::vector<Lexer::Token> bodyTokens = { tokens.begin() + cParenIndex + 2, tokens.begin() + cBracketIndex };
 			std::vector<std::vector<Lexer::Token>> test = GetAllScopesFromBody(bodyTokens);
 			functionInfo.instructions = GetInstructionsFromScopes(test);
+			simulationStackFrame.Clear();
 			i = cBracketIndex;
 
 			ret.push_back(functionInfo);
@@ -515,6 +516,7 @@ void Parser::ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& token
 	Instruction pushScopeInst{};
 	pushScopeInst.type = INSTRUCTION_TYPE_PUSH_SCOPE;
 	ret.push_back(pushScopeInst);
+	simulationStackFrame.IncrementScope();
 
 	scopesTraversed++;
 	ParseTokens(tokens, ret, scopesTraversed);
@@ -523,6 +525,7 @@ void Parser::ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& token
 	Instruction popScopeInst{};
 	popScopeInst.type = INSTRUCTION_TYPE_POP_SCOPE;
 	ret.push_back(popScopeInst);
+	simulationStackFrame.DecrementScope();
 
 	Instruction loopBackInst{};
 	loopBackInst.type = INSTRUCTION_TYPE_JUMP;
@@ -549,12 +552,14 @@ void Parser::ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens,
 	Instruction pushScopeInst{};
 	pushScopeInst.type = INSTRUCTION_TYPE_PUSH_SCOPE;
 	ret.push_back(pushScopeInst);
+	simulationStackFrame.IncrementScope();
 
 	size_t holder = 0;
 	FunctionBody forDecl = { part1 };
 	ParseTokens(forDecl, ret, holder);
 	ret.pop_back(); // ParseTokens adds a return instruction at the end of the return value if the scopesTraversed argument is 0, but thats not wanted here
 	ret.push_back(pushScopeInst); // the for loop variable is declared in its own scope, since the code outside the for loop cant reach it but it has to stay alive in between loops
+	simulationStackFrame.IncrementScope();
 	holder = 0;
 
 	size_t conditionIndex = ret.size();
@@ -573,7 +578,6 @@ void Parser::ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens,
 	Instruction popScopeInst{};
 	popScopeInst.type = INSTRUCTION_TYPE_POP_SCOPE;
 
-
 	FunctionBody endOfLoopComputations = { part3 };
 	ParseTokens(endOfLoopComputations, ret, holder);
 	ret.pop_back();
@@ -587,6 +591,8 @@ void Parser::ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens,
 
 	ret.push_back(popScopeInst);
 	ret.push_back(popScopeInst);
+	simulationStackFrame.DecrementScope();
+	simulationStackFrame.DecrementScope();
 
 	for (; i < tokens[scopeIndex].size(); i++)
 		if (tokens[scopeIndex][i].lexeme == LEXEME_CLOSE_PARENTHESIS)
@@ -701,7 +707,7 @@ AbstractSyntaxTree Parser::CreateAST(std::vector<Lexer::Token>& tokens)
 	{
 		Function* fnPtr = new Function(info);
 		ret.functions.insert(fnPtr);
-		if (info.name == "main")
+		if (info.name == Interpreter::entryPoint)
 			ret.entryPoint = fnPtr;
 	}
 	return ret;

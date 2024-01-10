@@ -1,17 +1,6 @@
 import "std/io.script"
 import "std/types.script"
 
-int Factorial(int value)
-{
-    int ret = 0;
-    while (value != 0)
-    {
-        ret = ret * value;
-        value = value - 1;
-    }
-    return ret;
-}
-
 void PrintFibonacciSequence(int amount)
 {
     int x;

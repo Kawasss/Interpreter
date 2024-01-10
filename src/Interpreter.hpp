@@ -22,6 +22,8 @@ enum InterpreterFlags
 InterpreterFlags operator|(const InterpreterFlags lvalue, const InterpreterFlags rvalue);
 InterpreterFlags operator&(const InterpreterFlags lvalue, const InterpreterFlags rvalue);
 
+inline std::vector<std::string> importedFiles;
+
 class Interpreter
 {
 public:
@@ -49,6 +51,11 @@ public:
 	{
 		return (T)*FindVariable(info.name);
 	}
+
+	static std::string entryPoint;
+	static bool dumpFunctionInstructions;
+	static bool dumpStackFrame;
+	static bool treatVoidAsError;
 
 private:
 	static void DeclareCacheVariable(const VariableInfo& info);

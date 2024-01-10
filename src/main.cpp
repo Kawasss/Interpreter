@@ -6,7 +6,7 @@
 #include "Function.hpp"
 #include "std.hpp"
 
-// do something with args, like -verbose and -entry_point string, then store them with flags in an enum and pass that to the interpreter
+bool verbose = false; // should not be here
 
 inline std::vector<char> ReadFile(const std::string& filePath)
 {
@@ -39,6 +39,10 @@ inline void CheckForImport(std::vector<Lexer::Token>& tokens)
 		tokens.erase(tokens.begin() + i); // remove the import statement to prevent an endless loop
 		tokens.insert(tokens.begin() + i, importTokens.begin(), importTokens.end());
 		i = 0;
+		importedFiles.push_back(file);
+
+		if (verbose)
+			std::cout << "Successfully imported file at " << file << "\n";
 	}
 }
 
@@ -47,20 +51,100 @@ inline void InterpretString(std::string input)
 	std::vector<Lexer::Token> tokens = Lexer::LexInput(input);
 	CheckForImport(tokens);
 	AbstractSyntaxTree tree = Parser::CreateAST(tokens);
-	
+	if (verbose)
+	{
+		std::cout << "Processed functions:\n";
+		for (Function* fn : tree.functions)
+			std::cout << "  " << fn->GetName() << ",\n";
+			
+		if (tree.entryPoint != nullptr)
+			std::cout << "Using " << tree.entryPoint->GetName() << " as entry point\n\n";
+	}
+
 	Interpreter::Init();
 	Interpreter::SetAST(tree);
 
 	StandardLib::Init();
 
-	tree.entryPoint->ExecuteBody();
+	if (tree.entryPoint == nullptr && !Interpreter::dumpFunctionInstructions && !Interpreter::dumpStackFrame)
+		throw std::runtime_error("Failed to find the entry point, create a function named \"main()\" or define a custom entry point with the command argument -entry_point");
+
+	if (!Interpreter::dumpFunctionInstructions && !Interpreter::dumpStackFrame) // dumping instructions means no code gets executed
+		tree.entryPoint->ExecuteBody();
+}
+
+enum Args
+{
+	ARG_NONE,
+	ARG_VERBOSE,
+	ARG_ENTRY_POINT,
+	ARG_DUMP_INSTRUCTIONS,
+	ARG_DUMP_STACK_FRAMES,
+	ARG_TREAT_VOID_AS_ERROR,
+	ARG_INPUT
+};
+
+std::string input = "";
+
+inline void ProcessArg(int argc, const char** argv)
+{
+	static std::unordered_map<std::string, Args> stringToArgs =
+	{
+		{ "-verbose", ARG_VERBOSE }, { "-entry_point", ARG_ENTRY_POINT }, { "-dump_instructions", ARG_DUMP_INSTRUCTIONS }, { "-input", ARG_INPUT }, 
+		{ "-dump_stack_frames", ARG_DUMP_STACK_FRAMES }, { "-treat_void_as_error", ARG_TREAT_VOID_AS_ERROR }
+	};
+	for (int i = 0; i < argc; i++)
+	{
+		std::string arg = argv[i];
+		if (stringToArgs.count(arg) == 0)
+			continue;
+
+		switch (stringToArgs[arg])
+		{
+		case ARG_VERBOSE:
+			verbose = true;
+			break;
+		case ARG_ENTRY_POINT:
+			Interpreter::entryPoint = argv[i + 1];
+			i++;
+			break;
+		case ARG_DUMP_INSTRUCTIONS:
+			Interpreter::dumpFunctionInstructions = true;
+			break;
+		case ARG_INPUT:
+			input = argv[i + 1];
+			i++;
+			break;
+		case ARG_DUMP_STACK_FRAMES:
+			Interpreter::dumpStackFrame = true;
+			break;
+		case ARG_TREAT_VOID_AS_ERROR:
+			Interpreter::treatVoidAsError = true;
+			break;
+		}
+	}
+	if (!verbose)
+		return;
+
+	std::cout << "Recieved " << argc << " arguments:\n";
+	for (int i = 0; i < argc; i++)
+	{
+		if (argv[i][0] == '-')
+			std::cout << "\n" << "  " << argv[i] << " ";
+		else
+			std::cout << argv[i];
+	}
+	std::cout << "\n\n";
 }
 
 int main(int argsc, const char** argsv)
 {
+	ProcessArg(argsc, argsv);
 	try 
 	{
-		std::vector<char> code = ReadFile("script/test.script");
+		if (input == "")
+			throw std::runtime_error("No input file given, use the -input command argument to give the input file");
+		std::vector<char> code = ReadFile(input);
 		std::string strCode = code.data();
 
 		InterpretString(strCode);

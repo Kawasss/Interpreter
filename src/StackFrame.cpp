@@ -1,4 +1,7 @@
+#include <iostream>
 #include "StackFrame.hpp"
+#include "Interpreter.hpp"
+#include "Debug.hpp"
 
 StackFrame::StackFrame()
 {
@@ -17,8 +20,23 @@ void StackFrame::IncrementScope()
 
 void StackFrame::DecrementScope()
 {
+	if (Interpreter::dumpStackFrame && firstPop)
+	{
+		std::cout << Debug::DumpStackFrame(this) << "\n";
+		firstPop = false;
+	}
 	scopes.back().clear();
 	scopes.pop_back();
+}
+
+size_t StackFrame::Size() const
+{
+	return scopes.size();
+}
+
+const Scope& StackFrame::At(size_t index) const
+{
+	return scopes[index];
 }
 
 Variable& StackFrame::operator[](std::string index)
@@ -49,4 +67,10 @@ void StackFrame::Clear()
 {
 	scopes.clear();
 	IncrementScope(); // always keep one scope alive
+	if (Interpreter::dumpStackFrame && firstPop)
+	{
+		std::cout << Debug::DumpStackFrame(this) << "\n";
+		firstPop = false;
+	}
+	firstPop = true;
 }

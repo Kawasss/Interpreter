@@ -1,5 +1,33 @@
 #include "Debug.hpp"
 #include "common.hpp"
+#include "StackFrame.hpp"
+#include <sstream>
+#include <iomanip>
+
+template<typename T> inline std::string ToHexadecimalString(T number)
+{
+	std::stringstream stream;
+	stream << "0x" << std::setfill('0') << std::setw(sizeof(T) * 2) << std::hex << number;
+	return stream.str();
+}
+
+std::string Debug::DumpStackFrame(const StackFrame* stackFrame)
+{
+	std::string ret = "Stack frame " + ToHexadecimalString(stackFrame) + " dump:\n";
+	for (int i = 0; i < stackFrame->Size(); i++)
+	{
+		std::string currentScope = "  Scope " + std::to_string(i) + ":\n";
+		const Scope& scope = stackFrame->At(i);
+		if (scope.size() == 0)
+			currentScope += "    None\n";
+		for (const std::pair<std::string, Variable>& pair : scope)
+		{
+			currentScope += "    " + pair.first + " (" + DataTypeToString(pair.second.type) + ")\n";
+		}
+		ret += currentScope;
+	}
+	return ret;
+}
 
 std::string Debug::DumpInstructionData(const Instruction& instruction)
 {

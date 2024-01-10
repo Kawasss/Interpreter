@@ -19,7 +19,7 @@ Function::Function(FunctionInfo& info)
 	this->returnType = info.returnType;
 	this->instructions = info.instructions;
 	CreateParameters();
-	if (!instructions.empty())
+	if (Interpreter::dumpFunctionInstructions && !instructions.empty())
 	{
 		std::cout << "Function \"" << name << "\" instruction dump:\n";
 		std::cout << Debug::DumpInstructionsData(instructions) << "\n";

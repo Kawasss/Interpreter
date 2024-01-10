@@ -2,12 +2,18 @@
 #include <stdexcept>
 #include "Interpreter.hpp"
 #include "Parser.hpp"
+#include "Debug.hpp"
 
 Scope Interpreter::cacheVariables;
 
 std::unordered_map<std::string, Function*> Interpreter::functions;
 std::unordered_map<std::string, std::vector<Variable>> Interpreter::buffers;
 Stack Interpreter::stack;
+
+std::string Interpreter::entryPoint = "main";
+bool Interpreter::dumpFunctionInstructions = false;
+bool Interpreter::dumpStackFrame = false;
+bool Interpreter::treatVoidAsError = false;
 
 void Interpreter::Init()
 {
@@ -156,7 +162,12 @@ Variable* Interpreter::FindVariable(std::string name)
 		return &cacheVariables[name];
 
 	if (stack.Last().Has(name))
+	{
+		if (treatVoidAsError && stack.Last().GetVariable(name).type == DATA_TYPE_VOID)
+			throw std::runtime_error("Runtime error: invalid type used (type == DATA_TYPE_VOID && treatVoidAsError)\nremove the -treat_void_as_error argument to remove this error");
 		return &stack.Last().GetVariable(name);
+	}
+		
 
 	throw std::runtime_error("Failed to find variable " + name);
 }
