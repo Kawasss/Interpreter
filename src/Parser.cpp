@@ -320,6 +320,7 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 				VariableInfo declVar{};
 				declVar.dataType = (DataType)tokens[scopeIndex][i].lexeme;
 				declVar.name = tokens[scopeIndex][i + 1].content;
+				declVar.size = Sizeof(declVar.dataType);
 
 				Instruction declareInst{};
 				declareInst.type = INSTRUCTION_TYPE_DECLARE;
@@ -733,7 +734,10 @@ FunctionInfo Parser::GetFunctionInfoFromTokens(std::vector<Lexer::Token>& tokens
 		case LEXEME_DATATYPE_VOID:
 		case LEXEME_DATATYPE_STRING:
 			if (recordParams)
+			{
 				currentVarInfo.dataType = (DataType)tokens[i].lexeme;
+				currentVarInfo.size = Sizeof(currentVarInfo.dataType);
+			}
 			else
 				ret.returnType = (DataType)tokens[i].lexeme;
 			break;

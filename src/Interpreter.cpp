@@ -74,9 +74,12 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 		case INSTRUCTION_TYPE_ASSIGN:
 		{
 			Variable var = GetValue(instruction.operand2);
+			var.name = instruction.operand1.name;
 			*FindVariable(instruction.operand1) = var;// GetValue(instruction.operand2);
 			if (cacheVariables.count(instruction.operand2.name) > 0) // if a cache variable is read from (done being used) it gets reset
-				cacheVariables[instruction.operand2.name] = { instruction.operand2.name, DATA_TYPE_FLOAT };
+				cacheVariables[instruction.operand2.name] = Variable(VariableInfo{ instruction.operand2.name, DATA_TYPE_VOID, 40 });
+			if (cacheVariables.count(instruction.operand1.name) > 0) // cache variables are always void
+				cacheVariables[instruction.operand1.name].SetDataType(DATA_TYPE_VOID);
 			break;
 		}
 
@@ -133,7 +136,7 @@ inline Variable GetConstantTypeAsVariable(VariableInfo& info)
 	switch (info.dataType)
 	{
 	case DATA_TYPE_STRING_CONSTANT:
-	case DATA_TYPE_CHAR_CONSTANT:  return info.name;
+	case DATA_TYPE_CHAR_CONSTANT:  return Variable(info.name);
 	case DATA_TYPE_FLOAT_CONSTANT: return std::stof(info.name);
 	case DATA_TYPE_INT_CONSTANT:   return std::stoi(info.name);
 	}
@@ -181,5 +184,5 @@ void Interpreter::DeclareBuffer(std::string name)
 
 void Interpreter::DeclareCacheVariable(const VariableInfo& info)
 {
-	cacheVariables[info.name] = { info.name, { info.dataType } };
+	cacheVariables[info.name] = { info };
 }

@@ -7,15 +7,16 @@
 class Function;
 struct AbstractSyntaxTree;
 
-const VariableInfo leftBoolValue =       { "%lbv", DATA_TYPE_INT  };
-const VariableInfo rightBoolValue =      { "%rbv", DATA_TYPE_INT  };
-const VariableInfo floatStorageVar =     { "%fsv", DATA_TYPE_VOID };
-const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_VOID };
-const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_VOID };
-const VariableInfo bufferParametersVar = { "%bpv", DATA_TYPE_VOID };
+const VariableInfo leftBoolValue =       { "%lbv", DATA_TYPE_INT, sizeof(int) };
+const VariableInfo rightBoolValue =      { "%rbv", DATA_TYPE_INT, sizeof(int) };
+const VariableInfo floatStorageVar =     { "%fsv", DATA_TYPE_VOID, 40 }; // random size
+const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_VOID, 40 };
+const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_VOID, 40 };
+const VariableInfo bufferParametersVar = { "%bpv", DATA_TYPE_VOID, 40 };
 
 enum InterpreterFlags
 {
+	OBJECT_FLAG_NONE = 0,
 	OBJECT_FLAG_VERBOSE = 1 << 0,
 };
 InterpreterFlags operator|(const InterpreterFlags lvalue, const InterpreterFlags rvalue);

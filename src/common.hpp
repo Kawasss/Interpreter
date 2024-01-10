@@ -72,14 +72,19 @@ struct VariableInfo
 {
 	std::string name = "";
 	DataType dataType = DATA_TYPE_INVALID;
+	uint32_t size = 0;
 };
 
 struct Variable
 {
 	Variable() = default;
-	Variable(std::string name, DataType type);
 	Variable(const Variable& rvalue) noexcept;
-	Variable(std::string value, std::string name = "");
+	Variable(const VariableInfo& rvalue);
+	Variable(std::string value, std::string name);
+	Variable(float rvalue);
+	Variable(char rvalue);
+	Variable(int rvalue);
+	Variable(std::string rvalue);
 
 	Variable& operator+=(const Variable& rvalue);
 	Variable& operator-=(const Variable& rvalue);
@@ -101,44 +106,34 @@ struct Variable
 	extern friend bool operator==(const Variable& lvalue, const Variable& rvalue);
 	extern friend bool operator!=(const Variable& lvalue, const Variable& rvalue);
 
-	template<typename T> Variable(T rvalue)
-	{
-		type = GetDataTypeTemplate<T>();
-		size = sizeof(T);
-		str = "";
-		if (std::is_same_v<T, std::string>)
-			str = rvalue;
-		else
-			data = (float)rvalue;
-	}
-
 	operator float() const;
 	operator int() const;
 	operator char() const;
 	operator std::string() const;
 
-	template<typename T> Variable& operator=(T rvalue)
-	{
-		if (type == DATA_TYPE_STRING && !std::is_same_v<T, std::string>)
-			throw std::runtime_error("Cannot assign non-string value to a string variable");
-		str = "";
-		if (std::is_same_v<T, std::string>)
-			str = rvalue;
-		else
-			data = (float)rvalue;
-		return *this;
-	}
+	Variable& operator=(float rvalue);
+	Variable& operator=(char rvalue);
+	Variable& operator=(int rvalue);
+	Variable& operator=(std::string rvalue);
 
 	std::string name = "";
 	DataType type = DATA_TYPE_INVALID;
 
 	std::string AsString();
 	DataType GetDataType();
+	void SetDataType(DataType type);
 
 private:
+	template<typename T> T GetDataAs() const
+	{
+		if (type != GetDataTypeTemplate<T>() || size != sizeof(T))
+			throw std::runtime_error("Invalid cast: types do not match");
+		return *(T*)data.data();
+	}
+	void Create(VariableInfo info);
+
 	size_t size = 0;
-	float data = 0;
-	std::string str = ""; // not efficient
+	std::vector<uint8_t> data;
 };
 
 struct Instruction

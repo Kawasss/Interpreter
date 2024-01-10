@@ -7,7 +7,7 @@ StackFrame::StackFrame()
 
 void StackFrame::Allocate(const VariableInfo& info)
 {
-	scopes.back().insert({ info.name, { info.name, info.dataType } });
+	scopes.back().insert({ info.name, Variable(VariableInfo{ info }) });
 }
 
 void StackFrame::IncrementScope()

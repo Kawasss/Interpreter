@@ -10,7 +10,7 @@ void StandardLib::Init()
 	SET_EXTERN_FUNCTION(ToFloat);
 	SET_EXTERN_FUNCTION(ToInt);
 	SET_EXTERN_FUNCTION(ToString);
-	SET_EXTERN_FUNCTION(IndexString);
+	//SET_EXTERN_FUNCTION(IndexString);
 	//SET_EXTERN_FUNCTION(nameof);
 	//SET_EXTERN_FUNCTION(typeof);
 }
@@ -18,7 +18,7 @@ void StandardLib::Init()
 WriteLine::WriteLine(Function* function) : Function(function)
 {
 	name = "WriteLine";
-	parameters = { { "text", DATA_TYPE_VOID } };
+	parameters = { { "text", DATA_TYPE_STRING } };
 	returnType = DATA_TYPE_VOID;
 }
 
@@ -61,7 +61,10 @@ ToInt::ToInt(Function* function) : Function(function)
 
 void ToInt::Execute()
 {
-	Return({ std::to_string(std::stoi(*Interpreter::FindVariable("text"))), DATA_TYPE_INT_CONSTANT });
+	std::string str = (std::string)*Interpreter::FindVariable("text");
+	int var = std::stoi(str);
+	std::string ret = std::to_string(var);
+	Return({ ret, DATA_TYPE_INT_CONSTANT });
 }
 
 nameof::nameof(Function* function) : Function(function)

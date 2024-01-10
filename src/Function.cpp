@@ -53,7 +53,7 @@ void Function::ExecuteBody()
 void Function::Return(VariableInfo info)
 {
 	static Instruction returnInst{ INSTRUCTION_TYPE_RETURN };
-	if (returnType == DATA_TYPE_VOID)
+	if (returnType == DATA_TYPE_VOID || DATA_TYPE_INVALID)
 	{
 		Interpreter::ExecuteInstructions({ returnInst });
 		return;

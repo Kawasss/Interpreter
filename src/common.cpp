@@ -1,10 +1,41 @@
 #include "common.hpp"
 
-Variable::Variable(std::string name, DataType type)
+inline bool DataTypeIsConstant(DataType type)
 {
-	this->name = name;
-	this->type = type;
-	size = Sizeof(type);
+	return type == DATA_TYPE_CHAR_CONSTANT || type == DATA_TYPE_FLOAT_CONSTANT || type == DATA_TYPE_INT_CONSTANT || type == DATA_TYPE_STRING_CONSTANT;
+}
+
+void Variable::Create(VariableInfo info)
+{
+	this->name = info.name;
+	this->type = info.dataType;
+	this->size = info.size;
+	data.resize(size);
+	memset(data.data(), 0, size);
+
+	switch (type) // most constant values require a different approach to copying
+	{
+	case DATA_TYPE_FLOAT_CONSTANT:
+	{
+		float resultF = std::stof(info.name);
+		memcpy(data.data(), &resultF, sizeof(resultF));
+		break;
+	}
+	case DATA_TYPE_CHAR_CONSTANT:
+		memcpy(data.data(), &info.name[0], sizeof(char));
+		break;
+	case DATA_TYPE_INT_CONSTANT:
+	{
+		int resultI = std::stof(info.name);
+		memcpy(data.data(), &resultI, sizeof(resultI));
+		break;
+	}
+	default:
+		if (!DataTypeIsString(type))
+			break;
+		memcpy(data.data(), &info.name, size);
+		break;
+	}
 }
 
 Variable::Variable(const Variable& rvalue) noexcept
@@ -12,25 +43,127 @@ Variable::Variable(const Variable& rvalue) noexcept
 	type = rvalue.type;
 	size = rvalue.size;
 	data = rvalue.data;
-	str = rvalue.str;
+}
+
+Variable::Variable(const VariableInfo& info)
+{
+	Create(info);
+}
+
+Variable::Variable(float rvalue)
+{
+	size = sizeof(rvalue);
+	type = DATA_TYPE_FLOAT;
+	data.resize(size);
+	memcpy(data.data(), &rvalue, size);
+}
+
+Variable::Variable(char rvalue)
+{
+	size = sizeof(rvalue);
+	type = DATA_TYPE_CHAR;
+	data.resize(size);
+	memcpy(data.data(), &rvalue, size);
+}
+
+Variable::Variable(int rvalue) 
+{
+	size = sizeof(rvalue);
+	type = DATA_TYPE_INT;
+	data.resize(size);
+	memcpy(data.data(), &rvalue, size);
+}
+
+Variable::Variable(std::string rvalue)
+{
+	size = sizeof(rvalue);
+	type = DATA_TYPE_STRING;
+	data.resize(size);
+	memcpy(data.data(), &rvalue, size);
 }
 
 Variable::Variable(std::string value, std::string name)
 {
 	type = name == "" ? DATA_TYPE_STRING_CONSTANT : DATA_TYPE_STRING;
 	size = sizeof(value);
-	str = value;
+	data.resize(size);
+	memcpy(data.data(), &value, size);
 	this->name = name;
+}
+
+Variable& Variable::operator=(float rvalue)
+{
+	if (size == 0)
+	{
+		size = sizeof(float);
+		data.resize(size);
+	}
+	memcpy(data.data(), &rvalue, size);
+	return *this;
+}
+
+Variable& Variable::operator=(char rvalue)
+{
+	if (size == 0)
+	{
+		size = sizeof(char);
+		data.resize(size);
+	}
+	memcpy(data.data(), &rvalue, size);
+	return *this;
+}
+
+Variable& Variable::operator=(int rvalue)
+{
+	if (size == 0)
+	{
+		size = sizeof(int);
+		data.resize(size);
+	}
+	memcpy(data.data(), &rvalue, size);
+	return *this;
+}
+Variable& Variable::operator=(std::string rvalue)
+{
+	if (size == 0)
+	{
+		size = sizeof(std::string);
+		data.resize(size);
+	}
+	memcpy(data.data(), &rvalue, size);
+	return *this;
 }
 
 Variable& Variable::operator+=(const Variable& rvalue)
 {
-	if ((type == DATA_TYPE_STRING || type == DATA_TYPE_STRING_CONSTANT) && (rvalue.type != DATA_TYPE_STRING && rvalue.type != DATA_TYPE_STRING_CONSTANT))
-		throw std::runtime_error("Cannot add a non-string value to a string");
-	if (type == DATA_TYPE_STRING || type == DATA_TYPE_STRING_CONSTANT)
-		str += rvalue.str;
-	else
-		data += rvalue.data;
+	if (type == DATA_TYPE_VOID && name[0] != '%')
+		type = DATA_TYPE_INT; // assume int as the default type
+	switch (rvalue.type)
+	{
+	case DATA_TYPE_STRING_CONSTANT:
+	case DATA_TYPE_STRING:
+		*(std::string*)data.data() += (std::string)rvalue;
+		break;
+	
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+	{
+		int first = *(int*)data.data();
+		int second = (int)rvalue;
+		int test = first + second;
+		memcpy(data.data(), &test, sizeof(test));
+		test--;
+	}
+		break;
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		*(float*)data.data() += (float)rvalue;
+		break;
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		*(char*)data.data() += (char)rvalue;
+		break;
+	}
 	return *this;
 }
 
@@ -42,7 +175,21 @@ Variable operator+(Variable lvalue, const Variable& rvalue)
 
 Variable& Variable::operator-=(const Variable& rvalue)
 {
-	data -= rvalue.data;
+	switch (type)
+	{
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		*(int*)data.data() -= rvalue.GetDataAs<int>();
+		break;
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		*(float*)data.data() -= rvalue.GetDataAs<float>();
+		break;
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		*(char*)data.data() -= rvalue.GetDataAs<char>();
+		break;
+	}
 	return *this;
 }
 
@@ -54,7 +201,21 @@ Variable operator-(Variable lvalue, const Variable& rvalue)
 
 Variable& Variable::operator/=(const Variable& rvalue)
 {
-	data /= rvalue.data;
+	switch (type)
+	{
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		*(int*)data.data() /= rvalue.GetDataAs<int>();
+		break;
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		*(float*)data.data() /= rvalue.GetDataAs<float>();
+		break;
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		*(char*)data.data() /= rvalue.GetDataAs<char>();
+		break;
+	}
 	return *this;
 }
 
@@ -66,7 +227,21 @@ Variable operator/(Variable lvalue, const Variable& rvalue)
 
 Variable& Variable::operator*=(const Variable& rvalue)
 {
-	data *= rvalue.data;
+	switch (type)
+	{
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		*(int*)data.data() *= rvalue.GetDataAs<int>();
+		break;
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		*(float*)data.data() *= rvalue.GetDataAs<float>();
+		break;
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		*(char*)data.data() *= rvalue.GetDataAs<char>();
+		break;
+	}
 	return *this;
 }
 
@@ -80,7 +255,8 @@ std::string Variable::operator[](size_t index)
 {
 	if (type != DATA_TYPE_STRING && type != DATA_TYPE_STRING_CONSTANT)
 		throw std::runtime_error("Cannot index this type: only strings can be indexed");
-	return std::string{ str[index] };
+	std::string* ptr = (std::string*)data.data();
+	return std::string{ ptr->at(index) };
 }
 
 bool operator<(const Variable& lvalue, const Variable& rvalue)
@@ -106,10 +282,21 @@ bool operator>=(const Variable& lvalue, const Variable& rvalue)
 
 bool operator==(const Variable& lvalue, const Variable& rvalue)
 {
-	if (lvalue.type == DATA_TYPE_STRING || lvalue.type == DATA_TYPE_STRING_CONSTANT)
-		return lvalue.str == rvalue.str;
-	else
-		return lvalue.data == rvalue.data;
+	switch (lvalue.type)
+	{
+	case DATA_TYPE_STRING:
+	case DATA_TYPE_STRING_CONSTANT:
+		return *(std::string*)lvalue.data.data() == rvalue.GetDataAs<std::string>();
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return *(int*)lvalue.data.data() == rvalue.GetDataAs<int>();
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return *(float*)lvalue.data.data() == rvalue.GetDataAs<float>();
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return *(char*)lvalue.data.data() == rvalue.GetDataAs<char>();
+	}
 }
 
 bool operator!=(const Variable& lvalue, const Variable& rvalue)
@@ -119,22 +306,63 @@ bool operator!=(const Variable& lvalue, const Variable& rvalue)
 
 Variable::operator char() const
 {
-	return (char)(int)data;
+	switch (type)
+	{
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return (char)*(int*)data.data();
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return (char)*(float*)data.data();
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return *(char*)data.data();
+	}
+	return '\0';
 }
 
 Variable::operator float() const
 {
-	return data;
+	switch (type)
+	{
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return (float)*(int*)data.data();
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return *(float*)data.data();
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return (float)*(char*)data.data();
+	}
+	return 0;
 }
 
 Variable::operator int() const
 {
-	return (int)data;
+	switch (type)
+	{
+	case DATA_TYPE_VOID:
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return *(int*)data.data();
+
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return (int)*(float*)data.data();
+		
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return (int)*(char*)data.data();
+	}
+	return 0;
 }
 
 Variable::operator std::string() const
 {
-	return str;
+	if (DataTypeIsString(type) || type == DATA_TYPE_VOID)
+		return *(std::string*)data.data();
+	return "";
 }
 
 std::string Variable::AsString()
@@ -142,17 +370,21 @@ std::string Variable::AsString()
 	switch (type)
 	{
 	case DATA_TYPE_CHAR:
-	case DATA_TYPE_CHAR_CONSTANT:
-		return std::string{ str };
+		return std::string{ (char)data[0] };
 	case DATA_TYPE_FLOAT:
-	case DATA_TYPE_FLOAT_CONSTANT:
-		return std::to_string((float)data);
+		return std::to_string(*(float*)data.data());
 	case DATA_TYPE_INT:
-	case DATA_TYPE_INT_CONSTANT:
-		return std::to_string((int)data);
+		return std::to_string(*(int*)data.data());
+	case DATA_TYPE_VOID:
+		if (data.size() < sizeof(std::string))
+			break;
+		[[fallthrough]];
 	case DATA_TYPE_STRING:
+	case DATA_TYPE_CHAR_CONSTANT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+	case DATA_TYPE_INT_CONSTANT:
 	case DATA_TYPE_STRING_CONSTANT:
-		return str;
+		return *(std::string*)data.data();
 	}
 	return "Cannot convert variable to string";
 }
@@ -160,6 +392,11 @@ std::string Variable::AsString()
 DataType Variable::GetDataType()
 {
 	return type;
+}
+
+void Variable::SetDataType(DataType type)
+{
+	this->type = type;
 }
 
 bool DataTypeIsFloat(DataType type)
@@ -186,9 +423,14 @@ size_t Sizeof(DataType dataType)
 {
 	switch (dataType)
 	{
+	case DATA_TYPE_FLOAT_CONSTANT:
 	case DATA_TYPE_FLOAT: return sizeof(float);
+	case DATA_TYPE_CHAR_CONSTANT:
 	case DATA_TYPE_CHAR: return sizeof(char);
+	case DATA_TYPE_INT_CONSTANT:
 	case DATA_TYPE_INT: return sizeof(int);
+	case DATA_TYPE_STRING_CONSTANT:
+	case DATA_TYPE_STRING: return sizeof(std::string);
 	}
 	return 0;
 }
