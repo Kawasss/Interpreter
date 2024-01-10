@@ -28,9 +28,13 @@ std::vector<Lexer::Token> Lexer::LexInput(std::string input)
 {
 	std::vector<Token> ret;
 	std::string processingString = EMPTY_STRING;
-	bool isInStringLiteral = false;
+	bool isInStringLiteral = false, isInCommentary = false;
 	for (int i = 0; i < input.size(); i++)
 	{
+		isInCommentary = isInCommentary ? input[i] == '\n' ? false : isInCommentary : input[i] == '#';
+		if (isInCommentary)
+			continue;
+
 		isInStringLiteral = isInStringLiteral ? input[i] != '\"' : input[i] == '\"';
 		if (!IsSeperator(input[i]) || isInStringLiteral)
 		{

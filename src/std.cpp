@@ -18,13 +18,13 @@ void StandardLib::Init()
 WriteLine::WriteLine(Function* function) : Function(function)
 {
 	name = "WriteLine";
-	parameters = { { "text", DATA_TYPE_FLOAT } };
+	parameters = { { "text", DATA_TYPE_VOID } };
 	returnType = DATA_TYPE_VOID;
 }
 
 void WriteLine::Execute()
 {
-	std::cout << (std::string)*Interpreter::FindVariable("text") << "\n";
+	std::cout << Interpreter::FindVariable("text")->AsString() << "\n";
 	Return({});
 }
 

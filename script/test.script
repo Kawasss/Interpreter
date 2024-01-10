@@ -31,6 +31,6 @@ void PrintFibonacciSequence(int amount)
 
 void main()
 {
-    string range = IndexStringRange("this is a long string", 1, 6);
+    string range = IndexStringRange("this is a long string", 1, 6); #this is commentary
     WriteLine(range);
 }
