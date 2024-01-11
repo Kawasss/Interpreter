@@ -24,6 +24,8 @@ std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
 	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }, { "for",    LEXEME_FOR              }
 };
 
+int Lexer::lineNumber = 0;
+
 std::vector<Lexer::Token> Lexer::LexInput(std::string input)
 {
 	std::vector<Token> ret;

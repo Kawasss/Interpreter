@@ -94,4 +94,5 @@ private:
 
 	static std::unordered_map<std::string, LexicalToken> stringToLexicalToken;
 	static std::unordered_map<std::string, Lexeme>       stringToLexeme;
+	static int lineNumber;
 };

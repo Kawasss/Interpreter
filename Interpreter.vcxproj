@@ -31,6 +31,7 @@
     <ClCompile Include="src\std.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Behavior.hpp" />
     <ClInclude Include="src\common.hpp" />
     <ClInclude Include="src\Debug.hpp" />
     <ClInclude Include="src\Interpreter.hpp" />

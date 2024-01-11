@@ -3,6 +3,7 @@
 #include "Function.hpp"
 #include "Interpreter.hpp"
 #include "Debug.hpp"
+#include "Behavior.hpp"
 
 Function::Function(Function* function)
 {
@@ -19,7 +20,7 @@ Function::Function(FunctionInfo& info)
 	this->returnType = info.returnType;
 	this->instructions = info.instructions;
 	CreateParameters();
-	if (Interpreter::dumpFunctionInstructions && !instructions.empty())
+	if (Behavior::dumpFunctionInstructions && !instructions.empty())
 	{
 		std::cout << "Function \"" << name << "\" instruction dump:\n";
 		std::cout << Debug::DumpInstructionsData(instructions) << "\n";

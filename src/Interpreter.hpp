@@ -14,14 +14,6 @@ const VariableInfo floatCalculationVar = { "%fcv", DATA_TYPE_VOID, 40 };
 const VariableInfo floatReturnVar =      { "%frv", DATA_TYPE_VOID, 40 };
 const VariableInfo bufferParametersVar = { "%bpv", DATA_TYPE_VOID, 40 };
 
-enum InterpreterFlags
-{
-	OBJECT_FLAG_NONE = 0,
-	OBJECT_FLAG_VERBOSE = 1 << 0,
-};
-InterpreterFlags operator|(const InterpreterFlags lvalue, const InterpreterFlags rvalue);
-InterpreterFlags operator&(const InterpreterFlags lvalue, const InterpreterFlags rvalue);
-
 inline std::vector<std::string> importedFiles;
 
 class Interpreter
@@ -51,11 +43,6 @@ public:
 	{
 		return (T)*FindVariable(info.name);
 	}
-
-	static std::string entryPoint;
-	static bool dumpFunctionInstructions;
-	static bool dumpStackFrame;
-	static bool treatVoidAsError;
 
 private:
 	static void DeclareCacheVariable(const VariableInfo& info);

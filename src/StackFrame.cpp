@@ -1,6 +1,6 @@
 #include <iostream>
 #include "StackFrame.hpp"
-#include "Interpreter.hpp"
+#include "Behavior.hpp"
 #include "Debug.hpp"
 
 StackFrame::StackFrame()
@@ -20,7 +20,7 @@ void StackFrame::IncrementScope()
 
 void StackFrame::DecrementScope()
 {
-	if (Interpreter::dumpStackFrame && firstPop)
+	if (Behavior::dumpStackFrame && firstPop)
 	{
 		std::cout << Debug::DumpStackFrame(this) << "\n";
 		firstPop = false;
@@ -67,7 +67,7 @@ void StackFrame::Clear()
 {
 	scopes.clear();
 	IncrementScope(); // always keep one scope alive
-	if (Interpreter::dumpStackFrame && firstPop)
+	if (Behavior::dumpStackFrame && firstPop)
 	{
 		std::cout << Debug::DumpStackFrame(this) << "\n";
 		firstPop = false;

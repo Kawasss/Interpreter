@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include "Parser.hpp"
 #include "Interpreter.hpp"
+#include "Behavior.hpp"
 
 StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
@@ -707,7 +708,7 @@ AbstractSyntaxTree Parser::CreateAST(std::vector<Lexer::Token>& tokens)
 	{
 		Function* fnPtr = new Function(info);
 		ret.functions.insert(fnPtr);
-		if (info.name == Interpreter::entryPoint)
+		if (info.name == Behavior::entryPoint)
 			ret.entryPoint = fnPtr;
 	}
 	return ret;
@@ -839,6 +840,9 @@ void Parser::CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue
 {
 	if (lvalue.dataType == LEXEME_DATATYPE_VOID || rvalue.dataType == DATA_TYPE_VOID || op == LEXEME_INVALID)
 		return; // voids cannot be checked
+
+	if (Behavior::disableImplicitConversion && lvalue.dataType != rvalue.dataType)
+		throw std::runtime_error("Invalid conversion: implicit conversions are disabled (disableImplicitConversion && lvalue.dataType != rvalue.dataType)\nremove the -disable_implicit_conversion argument to remove this error");
 
 	if (OneVariableIsString(lvalue, rvalue)) // no operator can be used if one is a string and the other is not (regardless of order)
 		throw std::runtime_error("Syntax error: cannot use a non-string value with a string");
