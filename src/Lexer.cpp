@@ -24,7 +24,7 @@ std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
 	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }, { "for",    LEXEME_FOR              }
 };
 
-int Lexer::lineNumber = 0;
+int Lexer::lineNumber = 1;
 
 std::vector<Lexer::Token> Lexer::LexInput(std::string input)
 {
@@ -33,6 +33,10 @@ std::vector<Lexer::Token> Lexer::LexInput(std::string input)
 	bool isInStringLiteral = false, isInCommentary = false;
 	for (int i = 0; i < input.size(); i++)
 	{
+		if (input[i] == '\n')
+			lineNumber++;
+		if (lineNumber)
+			lineNumber = lineNumber;
 		isInCommentary = isInCommentary ? input[i] == '\n' ? false : isInCommentary : input[i] == '#';
 		if (isInCommentary)
 			continue;
@@ -96,6 +100,7 @@ Lexer::Token Lexer::CreateToken(std::string content)
 	ret.content = content;
 	ret.token = GetLexicalToken(content);
 	ret.lexeme = GetLexeme(ret.token, content);
+	ret.line = lineNumber;
 
 	if (ret.lexeme == LEXEME_LITERAL_STRING) // remove the "'s of a string literal
 	{

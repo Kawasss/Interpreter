@@ -34,9 +34,6 @@ class typeof : public Function
 public:
 	typeof(Function* function);
 	void Execute() override;
-
-private:
-	std::string DataTypeToString(DataType type);
 };
 
 class GetLine : public Function

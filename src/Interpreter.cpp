@@ -147,9 +147,21 @@ inline Variable GetConstantTypeAsVariable(VariableInfo& info)
 
 Variable Interpreter::GetValue(VariableInfo& info)
 {
-	if (info.dataType == DATA_TYPE_STRING_CONSTANT)
-		return info.name;
-	return IsConstant(info.dataType) ? GetConstantTypeAsVariable(info) : *FindVariable(info);
+	if (!info.literalValue.empty())
+	{
+		switch (info.dataType)
+		{
+		case DATA_TYPE_STRING:
+			return info.literalValue;
+		case DATA_TYPE_FLOAT:
+			return std::stof(info.literalValue);
+		case DATA_TYPE_INT:
+			return std::stoi(info.literalValue);
+		case DATA_TYPE_CHAR:
+			return info.literalValue[0];
+		}
+	}
+	return *FindVariable(info);
 }
 
 Variable* Interpreter::FindVariable(std::string name)

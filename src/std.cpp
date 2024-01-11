@@ -53,7 +53,7 @@ ToString::ToString(Function* function) : Function(function)
 
 void ToString::Execute()
 {
-	Return({ Interpreter::FindVariable("value")->AsString(), DATA_TYPE_STRING_CONSTANT });
+	Return({ {}, DATA_TYPE_STRING, sizeof(std::string), Interpreter::FindVariable("value")->AsString() });
 }
 
 ToFloat::ToFloat(Function* function) : Function(function)
@@ -65,7 +65,7 @@ ToFloat::ToFloat(Function* function) : Function(function)
 
 void ToFloat::Execute()
 {
-	Return({ std::to_string(std::stof(*Interpreter::FindVariable("text"))), DATA_TYPE_FLOAT_CONSTANT });
+	Return({ {}, DATA_TYPE_FLOAT, sizeof(float), std::to_string(std::stof(*Interpreter::FindVariable("text"))) });
 }
 
 ToInt::ToInt(Function* function) : Function(function)
@@ -80,7 +80,7 @@ void ToInt::Execute()
 	std::string str = (std::string)*Interpreter::FindVariable("text");
 	int var = std::stoi(str);
 	std::string ret = std::to_string(var);
-	Return({ ret, DATA_TYPE_INT_CONSTANT });
+	Return({ {}, DATA_TYPE_INT, sizeof(int), ret });
 }
 
 nameof::nameof(Function* function) : Function(function)
@@ -104,27 +104,7 @@ typeof::typeof(Function* function) : Function(function)
 
 void typeof::Execute()
 {
-	Return({ DataTypeToString(Interpreter::FindVariable("var")->type), DATA_TYPE_STRING_CONSTANT });
-}
-
-std::string typeof::DataTypeToString(DataType type)
-{
-	switch (type)
-	{
-	case DATA_TYPE_CHAR_CONSTANT:
-	case DATA_TYPE_CHAR:
-		return "char";
-	case DATA_TYPE_FLOAT_CONSTANT:
-	case DATA_TYPE_FLOAT:
-		return "float";
-	case DATA_TYPE_INT_CONSTANT:
-	case DATA_TYPE_INT:
-		return "int";
-	case DATA_TYPE_STRING_CONSTANT:
-	case DATA_TYPE_STRING:
-		return "string";
-	}
-	return "invalid_type";
+	Return({ DataTypeToInternalTypeString(Interpreter::FindVariable("var")->type), DATA_TYPE_STRING_CONSTANT });
 }
 
 GetLine::GetLine(Function* function) : Function(function)
@@ -137,7 +117,7 @@ void GetLine::Execute()
 {
 	std::string ret;
 	std::cin >> ret;
-	Return({ ret, DATA_TYPE_STRING_CONSTANT });
+	Return({ {}, DATA_TYPE_STRING, sizeof(std::string), ret});
 }
 
 IndexString::IndexString(Function* function) : Function(function)

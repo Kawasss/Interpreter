@@ -42,11 +42,11 @@ private:
 	static void ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 
-	static void GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);
+	static void GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);
 
 	static void CheckOpenCloseIntegrityPremature(const std::vector<Lexer::Token>& tokens);
-	static void CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue);
-	static void CheckInstructionIntegrity(const Instruction& instruction);
+	static void CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue, int line);
+	static void CheckInstructionIntegrity(const Instruction& instruction, int index);
 	static Lexeme InstructionTypeToLexemeOperator(InstructionType type);
 
 	static StackFrame simulationStackFrame;

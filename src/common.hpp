@@ -47,6 +47,7 @@ enum DataType
 	DATA_TYPE_INT_CONSTANT,
 	DATA_TYPE_STRING_CONSTANT
 };
+inline extern std::string DataTypeToInternalTypeString(DataType type);
 inline extern std::string DataTypeToString(DataType type);
 inline extern bool DataTypeIsFloat(DataType type);
 inline extern bool DataTypeIsChar(DataType type);
@@ -73,6 +74,7 @@ struct VariableInfo
 	std::string name = "";
 	DataType dataType = DATA_TYPE_INVALID;
 	uint32_t size = 0;
+	std::string literalValue;
 };
 
 struct Variable

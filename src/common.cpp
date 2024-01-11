@@ -465,6 +465,24 @@ std::string InstructionTypeToString(InstructionType type)
 	return "";
 }
 
+std::string DataTypeToInternalTypeString(DataType type)
+{
+	switch (type)
+	{
+	case DATA_TYPE_FLOAT:           return "float";
+	case DATA_TYPE_CHAR:            return "char";
+	case DATA_TYPE_INT:             return "int";
+	case DATA_TYPE_STRING:          return "string";
+	case DATA_TYPE_VOID:            return "void";
+	case DATA_TYPE_USERTYPE:        return "user_type";
+	case DATA_TYPE_FLOAT_CONSTANT:  return "float_literal";
+	case DATA_TYPE_CHAR_CONSTANT:   return "char_literal";
+	case DATA_TYPE_INT_CONSTANT:    return "int_literal";
+	case DATA_TYPE_STRING_CONSTANT: return "string_literal";
+	}
+	return "invalid_type";
+}
+
 std::string DataTypeToString(DataType type)
 {
 	switch (type)

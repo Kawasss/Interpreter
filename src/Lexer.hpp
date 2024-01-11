@@ -76,6 +76,7 @@ public:
 		std::string content = EMPTY_STRING;
 		LexicalToken token = LEXER_TOKEN_INVALID;
 		Lexeme lexeme = LEXEME_INVALID;
+		int line = 0;
 	};
 
 	static std::vector<Token> LexInput(std::string input);

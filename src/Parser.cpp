@@ -64,13 +64,13 @@ inline DataType LexemeLiteralToDataType(Lexeme lexeme)
 	switch (lexeme)
 	{
 	case LEXEME_LITERAL_CHAR:
-		return DATA_TYPE_CHAR_CONSTANT;
+		return DATA_TYPE_CHAR;
 	case LEXEME_LITERAL_FLOAT:
-		return DATA_TYPE_FLOAT_CONSTANT;
+		return DATA_TYPE_FLOAT;
 	case LEXEME_LITERAL_INT:
-		return DATA_TYPE_INT_CONSTANT;
+		return DATA_TYPE_INT;
 	case LEXEME_LITERAL_STRING:
-		return DATA_TYPE_STRING_CONSTANT;
+		return DATA_TYPE_STRING;
 	}
 	return DATA_TYPE_INVALID;
 }
@@ -214,7 +214,7 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 		case LEXER_TOKEN_LITERAL:
 		{
 			final.operand2.dataType = LexemeLiteralToDataType(tokens[i].lexeme);
-			final.operand2.name = tokens[i].content;
+			final.operand2.literalValue = tokens[i].content;
 			destination.push_back(final);
 			final = { INSTRUCTION_TYPE_ASSIGN, floatCalculationVar };
 			break;
@@ -355,7 +355,7 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 
 				VariableInfo assignVar = GetAssignVariableInfo(lvalue);
 				GetInstructionsFromRValue(rvalue, ret, floatCalculationVar);
-				GetInstructionsForLexemeEqualsOperator(tokens[scopeIndex][i].lexeme, assignVar, ret);
+				GetInstructionsForLexemeEqualsOperator(tokens[scopeIndex][i], assignVar, ret);
 				i = endIndex;
 				break;
 			}
@@ -404,10 +404,10 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 			ret.push_back({ INSTRUCTION_TYPE_RETURN });
 	}
 	for (size_t i = 0; i < ret.size(); i++) // lazily check all instructions (not the fastest)
-		CheckInstructionIntegrity(ret[i]);
+		CheckInstructionIntegrity(ret[i], i);
 }
 
-void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInfo& info, std::vector<Instruction>& instructions)
+void Parser::GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& info, std::vector<Instruction>& instructions)
 {
 	VariableInfo varToReadFrom = floatCalculationVar;
 	if (instructions.back().type == INSTRUCTION_TYPE_ASSIGN && instructions.back().operand1.name == varToReadFrom.name)
@@ -415,8 +415,8 @@ void Parser::GetInstructionsForLexemeEqualsOperator(Lexeme op, const VariableInf
 		varToReadFrom = instructions.back().operand2;
 		instructions.pop_back();
 	}
-	CheckOperationIntegrity(op, info, varToReadFrom);
-	switch (op)
+	CheckOperationIntegrity(op.lexeme, info, varToReadFrom, op.line);
+	switch (op.lexeme)
 	{
 	case LEXEME_EQUALS:
 	{
@@ -497,7 +497,7 @@ void Parser::ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, 
 
 	simulationStackFrame.DecrementScope();
 
-	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT_CONSTANT };
+	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT };
 	for (; i < tokens[scopeIndex].size(); i++)
 		if (tokens[scopeIndex][i].lexeme == LEXEME_CLOSE_PARENTHESIS)
 			break;
@@ -530,10 +530,10 @@ void Parser::ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& token
 
 	Instruction loopBackInst{};
 	loopBackInst.type = INSTRUCTION_TYPE_JUMP;
-	loopBackInst.operand1 = { std::to_string((int64_t)conditionIndex - (int64_t)ret.size()), DATA_TYPE_INT_CONSTANT };
+	loopBackInst.operand1 = { std::to_string((int64_t)conditionIndex - (int64_t)ret.size()), DATA_TYPE_INT };
 	ret.push_back(loopBackInst);
 
-	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT_CONSTANT };
+	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT };
 	for (; i < tokens[scopeIndex].size(); i++)
 		if (tokens[scopeIndex][i].lexeme == LEXEME_CLOSE_PARENTHESIS)
 			break;
@@ -585,10 +585,10 @@ void Parser::ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens,
 
 	Instruction loopBackInst{};
 	loopBackInst.type = INSTRUCTION_TYPE_JUMP;
-	loopBackInst.operand1 = { std::to_string((int64_t)conditionIndex - (int64_t)ret.size()), DATA_TYPE_INT_CONSTANT };
+	loopBackInst.operand1 = { std::to_string((int64_t)conditionIndex - (int64_t)ret.size()), DATA_TYPE_INT };
 	ret.push_back(loopBackInst);
 
-	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT_CONSTANT };
+	ret[jumpInstIndex].operand1 = { std::to_string(ret.size() - jumpInstIndex), DATA_TYPE_INT };
 
 	ret.push_back(popScopeInst);
 	ret.push_back(popScopeInst);
@@ -616,13 +616,32 @@ void Parser::GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t 
 
 	if (lvalue.size() > 1)
 		GetInstructionsFromRValue(lvalue, ret, leftBoolValue);
+	else if (lvalue[0].token == LEXER_TOKEN_LITERAL)
+	{
+		compareInst.operand1.dataType = LexemeLiteralToDataType(lvalue[0].lexeme);
+		compareInst.operand1.literalValue = lvalue[0].token;
+	}
 	else
-		compareInst.operand1 = { lvalue[0].content, lvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(lvalue[0].lexeme) : simulationStackFrame[lvalue[0].content].GetDataType() };
+	{
+		compareInst.operand1.name = lvalue[0].content;
+		compareInst.operand1.dataType = simulationStackFrame[lvalue[0].content].GetDataType();
+	}
+	compareInst.operand1.size = Sizeof(compareInst.operand1.dataType);	
 
 	if (rvalue.size() > 1)
 		GetInstructionsFromRValue(rvalue, ret, rightBoolValue);
+	else if (rvalue[0].token == LEXER_TOKEN_LITERAL)
+	{
+		compareInst.operand2.dataType = LexemeLiteralToDataType(rvalue[0].lexeme);
+		compareInst.operand2.literalValue = rvalue[0].token;
+	}
 	else
-		compareInst.operand2 = { rvalue[0].content, rvalue[0].token == LEXER_TOKEN_LITERAL ? LexemeLiteralToDataType(rvalue[0].lexeme) : simulationStackFrame[lvalue[0].content].GetDataType() };
+	{
+		compareInst.operand2.name = rvalue[0].content;
+		compareInst.operand2.dataType = simulationStackFrame[rvalue[0].content].GetDataType();
+	}
+	compareInst.operand2.size = Sizeof(compareInst.operand2.dataType);
+		
 	ret.push_back(compareInst);
 }
 
@@ -836,33 +855,33 @@ inline bool OneVariableIsString(const VariableInfo& lvalue, const VariableInfo& 
 	return (DataTypeIsString(lvalue.dataType) && !DataTypeIsString(rvalue.dataType)) || (!DataTypeIsString(lvalue.dataType) && DataTypeIsString(rvalue.dataType));
 }
 
-void Parser::CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue)
+void Parser::CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue, int line)
 {
 	if (lvalue.dataType == LEXEME_DATATYPE_VOID || rvalue.dataType == DATA_TYPE_VOID || op == LEXEME_INVALID)
 		return; // voids cannot be checked
 
-	if (Behavior::disableImplicitConversion && lvalue.dataType != rvalue.dataType)
-		throw std::runtime_error("Invalid conversion: implicit conversions are disabled (disableImplicitConversion && lvalue.dataType != rvalue.dataType)\nremove the -disable_implicit_conversion argument to remove this error");
+	if (Behavior::disableImplicitConversion && (lvalue.dataType != rvalue.dataType))
+		throw std::runtime_error("Invalid conversion (from " + DataTypeToInternalTypeString(rvalue.dataType) + " to " + DataTypeToInternalTypeString(lvalue.dataType) + ") at line " + std::to_string(line) + ": implicit conversions are disabled (disableImplicitConversion && lvalue.dataType != rvalue.dataType)\nremove the - disable_implicit_conversion argument to remove this error");
 
 	if (OneVariableIsString(lvalue, rvalue)) // no operator can be used if one is a string and the other is not (regardless of order)
-		throw std::runtime_error("Syntax error: cannot use a non-string value with a string");
+		throw std::runtime_error("Syntax error at line " + std::to_string(line) + ": cannot use a non-string value (type: " + DataTypeToInternalTypeString(lvalue.dataType) + ") with a string");
 
 	if (op == LEXEME_EQUALS)
 		return;
 
 	if ((op == LEXEME_PLUS || op == LEXEME_PLUSEQUALS) && OneVariableIsString(lvalue, rvalue)) // strings can only be added to each other if both vars are a string
-		throw std::runtime_error("Syntax error: cannot add a non-string value to a string");
+		throw std::runtime_error("Syntax error at line " + std::to_string(line) + ": cannot add a non-string value (type: " + DataTypeToInternalTypeString(lvalue.dataType) + ") to a string");
 	if (IsOperatorBinary(op) && (op != LEXEME_PLUS && op != LEXEME_PLUSEQUALS) && (DataTypeIsString(lvalue.dataType) || DataTypeIsString(rvalue.dataType))) // the only valid binary operator for strings is '+(=)'
-		throw std::runtime_error("Syntax error: cannot use current operator, it is not valid for strings");
+		throw std::runtime_error("Syntax error at line " + std::to_string(line) + ": cannot use current operator, it is not valid for strings");
 
 	if (lvalue.dataType == DATA_TYPE_USERTYPE || rvalue.dataType == DATA_TYPE_USERTYPE)
-		throw std::runtime_error("Syntax error: operators cannot be used on user types");
+		throw std::runtime_error("Syntax error at line " + std::to_string(line) + ": operators cannot be used on user types");
 }
 
-void Parser::CheckInstructionIntegrity(const Instruction& instruction)
+void Parser::CheckInstructionIntegrity(const Instruction& instruction, int index)
 {
 	const Lexeme op = InstructionTypeToLexemeOperator(instruction.type);
-	CheckOperationIntegrity(op, instruction.operand1, instruction.operand2);
+	CheckOperationIntegrity(op, instruction.operand1, instruction.operand2, index);
 }
 
 bool Parser::IsFunctionDeclaration(std::vector<Lexer::Token>& tokens)
