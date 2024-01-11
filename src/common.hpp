@@ -45,7 +45,8 @@ enum DataType
 	DATA_TYPE_FLOAT_CONSTANT,
 	DATA_TYPE_CHAR_CONSTANT,
 	DATA_TYPE_INT_CONSTANT,
-	DATA_TYPE_STRING_CONSTANT
+	DATA_TYPE_STRING_CONSTANT,
+	DATA_TYPE_POINTER,
 };
 inline extern std::string DataTypeToInternalTypeString(DataType type);
 inline extern std::string DataTypeToString(DataType type);
@@ -120,6 +121,7 @@ struct Variable
 
 	std::string name = "";
 	DataType type = DATA_TYPE_INVALID;
+	DataType baseType = DATA_TYPE_INVALID; // only applies if the variable is a pointer
 
 	std::string AsString();
 	DataType GetDataType();

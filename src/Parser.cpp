@@ -343,6 +343,9 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 
 			case LEXER_TOKEN_OPERATOR: // this covers more than just the equals operators so not the best solution
 			{
+				if (tokens[scopeIndex][i].lexeme == LEXEME_PLUSPLUS || tokens[scopeIndex][i].lexeme == LEXEME_MINUSMINUS)
+					ReplaceTokensForSpecialOperator(i, tokens[scopeIndex]);
+
 				if (tokens[scopeIndex][i].content.back() != '=')
 					break;
 				size_t endIndex = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
@@ -405,6 +408,33 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 	}
 	for (size_t i = 0; i < ret.size(); i++) // lazily check all instructions (not the fastest)
 		CheckInstructionIntegrity(ret[i], i);
+}
+
+void Parser::ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::Token>& tokens)
+{
+	switch (tokens[index].lexeme)
+	{
+	case LEXEME_PLUSPLUS:
+	{
+		tokens[index].lexeme = LEXEME_PLUSEQUALS;
+		tokens[index].content = "+=";
+		break;
+	}
+	case LEXEME_MINUSMINUS:
+	{
+		tokens[index].lexeme = LEXEME_MINUSEQUALS;
+		tokens[index].content = "-=";
+		break;
+	}
+	}
+	Lexer::Token newToken{};
+	newToken.token = LEXER_TOKEN_LITERAL;
+	newToken.lexeme = LEXEME_LITERAL_INT;
+	newToken.line = tokens[index].line;
+	newToken.content = "1";
+
+	tokens.insert(tokens.begin() + index + 1, newToken);
+	return;
 }
 
 void Parser::GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& info, std::vector<Instruction>& instructions)

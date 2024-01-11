@@ -49,6 +49,8 @@ private:
 	static void CheckInstructionIntegrity(const Instruction& instruction, int index);
 	static Lexeme InstructionTypeToLexemeOperator(InstructionType type);
 
+	static void ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::Token>& tokens);
+
 	static StackFrame simulationStackFrame;
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
 };

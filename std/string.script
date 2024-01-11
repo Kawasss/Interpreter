@@ -3,7 +3,7 @@ extern string IndexString(string input, int index);
 string IndexStringRange(string input, int begin, int end)
 {
 	string ret;
-	for (int i = begin; i < end; i += 1)
+	for (int i = begin; i < end; i++)
 	{
 		string character = IndexString(input, i);
 		ret = ret + character;

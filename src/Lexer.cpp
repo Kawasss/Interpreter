@@ -9,7 +9,7 @@ std::unordered_map<std::string, LexicalToken> Lexer::stringToLexicalToken =
 	{ "float",  LEXER_TOKEN_DATATYPE  }, { "int",    LEXER_TOKEN_DATATYPE  }, { "char",   LEXER_TOKEN_DATATYPE  }, { "struct", LEXER_TOKEN_DATATYPE  }, { "void", LEXER_TOKEN_DATATYPE  },
 	{ "return", LEXER_TOKEN_KEYWORD   }, { "extern", LEXER_TOKEN_KEYWORD   }, { "string", LEXER_TOKEN_DATATYPE  }, { "import", LEXER_TOKEN_KEYWORD   }, { "if",   LEXER_TOKEN_KEYWORD   },
 	{ "while",  LEXER_TOKEN_KEYWORD   }, { ">",      LEXER_TOKEN_OPERATOR  }, { "<",      LEXER_TOKEN_OPERATOR  }, { ">=",     LEXER_TOKEN_OPERATOR  }, { "<=",   LEXER_TOKEN_OPERATOR  },
-	{ "for",    LEXER_TOKEN_KEYWORD   }
+	{ "for",    LEXER_TOKEN_KEYWORD   }, { "[",      LEXER_TOKEN_OPERATOR  }, { "]",      LEXER_TOKEN_OPERATOR  }, { "++",     LEXER_TOKEN_OPERATOR  }, { "--",   LEXER_TOKEN_OPERATOR  }
 };
 
 std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
@@ -21,7 +21,8 @@ std::unordered_map<std::string, Lexeme> Lexer::stringToLexeme =
 	{ "float",  LEXEME_DATATYPE_FLOAT  }, { "int",    LEXEME_DATATYPE_INT   }, { "char", LEXEME_DATATYPE_CHAR  }, { "struct", LEXEME_STRUCT           }, { "void",   LEXEME_DATATYPE_VOID     },
 	{ ".",      LEXEME_DOT             }, { ",",      LEXEME_COMMA          }, { "\n",   LEXEME_NEWLINE        }, { "return", LEXEME_RETURN           }, { "extern", LEXEME_EXTERN            },
 	{ "string", LEXEME_DATATYPE_STRING }, { "import", LEXEME_IMPORT         }, { "if",   LEXEME_IF             }, { "while",  LEXEME_WHILE            }, { ">",      LEXEME_GREATER           }, 
-	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }, { "for",    LEXEME_FOR              }
+	{ "<",      LEXEME_LESS            }, { ">=",     LEXEME_IS_OR_GREATER  }, { "<=",   LEXEME_IS_OR_LESS     }, { "for",    LEXEME_FOR              }, { "++",     LEXEME_PLUSPLUS          },
+	{ "--",     LEXEME_MINUSMINUS      }
 };
 
 int Lexer::lineNumber = 1;
@@ -42,9 +43,27 @@ std::vector<Lexer::Token> Lexer::LexInput(std::string input)
 			continue;
 
 		isInStringLiteral = isInStringLiteral ? input[i] != '\"' : input[i] == '\"';
-		if (!IsSeperator(input[i]) || isInStringLiteral)
+		if ((!IsSeperator(input[i]) && !IsOperator(input[i])) || isInStringLiteral)
 		{
 			processingString += input[i];
+			continue;
+		}
+
+		if (IsOperator(input[i]) && i != input.size() - 1)
+		{
+			if (!processingString.empty())
+				ret.push_back(CreateToken(processingString));
+			bool isLargeOperator = IsOperator(input[(size_t)i + 1]);
+			if (isLargeOperator)
+			{
+				
+				std::string fullOperator = std::string{ input[i] } + std::string{ input[(size_t)i + 1] };
+				ret.push_back(CreateToken(fullOperator));
+				i++;
+			}
+			else
+				ret.push_back(CreateToken(std::string{ input[i] }));
+			processingString = EMPTY_STRING;
 			continue;
 		}
 
@@ -142,6 +161,8 @@ bool Lexer::IsOperator(char item)
 	case '=':
 	case '%':
 	case '!':
+	case '[':
+	case ']':
 		return true;
 	}
 	return false;
