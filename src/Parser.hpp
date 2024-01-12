@@ -28,6 +28,7 @@ public:
 	static VariableInfo GetAssignVariableInfo(std::vector<Lexer::Token>& lvalue);
 	static FunctionInfo GetFunctionInfoFromTokens(std::vector<Lexer::Token>& tokens);
 	static bool IsFunctionDeclaration(std::vector<Lexer::Token>& tokens);
+	static bool DoesFunctionExist(std::string name);
 
 private:
 	static std::vector<std::vector<Lexer::Token>> DivideByEndLine(std::vector<Lexer::Token>& tokens);
@@ -53,4 +54,5 @@ private:
 
 	static StackFrame simulationStackFrame;
 	static std::unordered_map<std::string, FunctionInfo> functionInfos;
+	static std::unordered_set<std::string> calledFunctions;
 };

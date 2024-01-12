@@ -12,7 +12,10 @@ enum Args
 	ARG_DUMP_STACK_FRAMES,
 	ARG_TREAT_VOID_AS_ERROR,
 	ARG_DISABLE_IMPLICIT_CONVERSION,
-	ARG_INPUT
+	ARG_INPUT,
+	ARG_REMOVE_UNUSED_SYMBOLS,
+	ARG_OPTIMIZE_INSTRUCTIONS,
+	ARG_PARSE_MULTITHREADED, // reserved
 };
 
 namespace Behavior
@@ -22,6 +25,8 @@ namespace Behavior
 	inline bool dumpStackFrame = false;
 	inline bool treatVoidAsError = false;
 	inline bool disableImplicitConversion = false;
+	inline bool removeUnusedSymbols = false;
+	inline bool optimizeInstructions = false;
 
 	inline std::string input = "";
 	inline std::string entryPoint = "main";
@@ -30,8 +35,10 @@ namespace Behavior
 	{
 		static std::unordered_map<std::string, Args> stringToArgs =
 		{
-			{ "-verbose", ARG_VERBOSE }, { "-entry_point", ARG_ENTRY_POINT }, { "-dump_instructions", ARG_DUMP_INSTRUCTIONS }, { "-input", ARG_INPUT },
-			{ "-dump_stack_frames", ARG_DUMP_STACK_FRAMES }, { "-treat_void_as_error", ARG_TREAT_VOID_AS_ERROR }, { "-disable_implicit_conversion", ARG_DISABLE_IMPLICIT_CONVERSION }
+			{ "-verbose", ARG_VERBOSE }, { "-entry_point",       ARG_ENTRY_POINT       }, { "-dump_instructions", ARG_DUMP_INSTRUCTIONS     },
+			{ "-input",   ARG_INPUT   }, { "-dump_stack_frames", ARG_DUMP_STACK_FRAMES }, { "-treat_void_as_error", ARG_TREAT_VOID_AS_ERROR },
+			{ "-remove_unused_symbols", ARG_REMOVE_UNUSED_SYMBOLS }, {"-disable_implicit_conversion", ARG_DISABLE_IMPLICIT_CONVERSION},
+			{ "-optimize_instructions", ARG_OPTIMIZE_INSTRUCTIONS }, { "-parse_multithreaded", ARG_PARSE_MULTITHREADED },
 		};
 		for (int i = 0; i < argc; i++)
 		{
@@ -63,6 +70,12 @@ namespace Behavior
 				break;
 			case ARG_DISABLE_IMPLICIT_CONVERSION:
 				disableImplicitConversion = true;
+				break;
+			case ARG_REMOVE_UNUSED_SYMBOLS:
+				removeUnusedSymbols = true;
+				break;
+			case ARG_OPTIMIZE_INSTRUCTIONS:
+				optimizeInstructions = true;
 				break;
 			}
 		}

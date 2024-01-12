@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <conio.h>
 #include "Lexer.hpp"
 #include "Parser.hpp"
 #include "Interpreter.hpp"
@@ -89,8 +90,10 @@ int main(int argsc, const char** argsv)
 		std::cerr << ex.what() << std::endl;
 	}
 
-	int waiting;
-	std::cin >> waiting;
+	#ifdef _WIN32 // afaik this only works on windows?
+	std::cout << "\nExecution ended, press any key to exit...";
+	_getch();
+	#endif
 
 	return 0;
 }

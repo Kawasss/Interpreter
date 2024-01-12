@@ -6,6 +6,7 @@
 
 StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
+std::unordered_set<std::string> Parser::calledFunctions;
 
 inline size_t GetNextInstanceOfLexeme(Lexeme lexeme, size_t index, std::vector<Lexer::Token>& tokens)
 {
@@ -246,6 +247,9 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 			final.operand2 = floatReturnVar;
 			destination.push_back(final);
 			final = { INSTRUCTION_TYPE_ASSIGN, floatCalculationVar };
+
+			if (calledFunctions.count(functionName) == 0)
+				calledFunctions.insert(functionName);
 			break;
 		}
 		}
@@ -400,6 +404,9 @@ void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, si
 				callInst.type = INSTRUCTION_TYPE_CALL;
 				callInst.operand1 = { functionName, functionInfos[functionName].returnType };
 				ret.push_back(callInst);
+
+				if (calledFunctions.count(functionName) == 0)
+					calledFunctions.insert(functionName);
 				break;
 			}
 		}
@@ -415,17 +422,13 @@ void Parser::ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::To
 	switch (tokens[index].lexeme)
 	{
 	case LEXEME_PLUSPLUS:
-	{
 		tokens[index].lexeme = LEXEME_PLUSEQUALS;
 		tokens[index].content = "+=";
 		break;
-	}
 	case LEXEME_MINUSMINUS:
-	{
 		tokens[index].lexeme = LEXEME_MINUSEQUALS;
 		tokens[index].content = "-=";
 		break;
-	}
 	}
 	Lexer::Token newToken{};
 	newToken.token = LEXER_TOKEN_LITERAL;
@@ -440,66 +443,36 @@ void Parser::ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::To
 void Parser::GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& info, std::vector<Instruction>& instructions)
 {
 	VariableInfo varToReadFrom = floatCalculationVar;
-	if (instructions.back().type == INSTRUCTION_TYPE_ASSIGN && instructions.back().operand1.name == varToReadFrom.name)
+	if (instructions.back().type == INSTRUCTION_TYPE_ASSIGN && instructions.back().operand1.name == varToReadFrom.name) // merge instructions that would otherwise just pass values along
 	{
 		varToReadFrom = instructions.back().operand2;
 		instructions.pop_back();
 	}
 	CheckOperationIntegrity(op.lexeme, info, varToReadFrom, op.line);
+
+	Instruction inst{};
+	inst.operand1 = info;
+	inst.operand2 = varToReadFrom;
+
 	switch (op.lexeme)
 	{
 	case LEXEME_EQUALS:
-	{
-		Instruction assignInst{};
-		assignInst.type = INSTRUCTION_TYPE_ASSIGN;
-		assignInst.operand1 = info;
-		assignInst.operand2 = varToReadFrom;
-
-		instructions.push_back(assignInst);
+		inst.type = INSTRUCTION_TYPE_ASSIGN;
 		break;
-	}
-
 	case LEXEME_PLUSEQUALS: // can be done better by having a map / function that takes for example PLUSEQUALS and returns PLUS
-	{
-		Instruction addInst{};
-		addInst.type = INSTRUCTION_TYPE_ADD;
-		addInst.operand1 = info;
-		addInst.operand2 = varToReadFrom;
-
-		instructions.push_back(addInst);
+		inst.type = INSTRUCTION_TYPE_ADD;
 		break;
-	}
 	case LEXEME_MINUSEQUALS:
-	{
-		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_SUBTRACT;
-		inst.operand1 = info;
-		inst.operand2 = varToReadFrom;
-
-		instructions.push_back(inst);
 		break;
-	}
 	case LEXEME_MULTIPLYEQUALS:
-	{
-		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_MULTIPLY;
-		inst.operand1 = info;
-		inst.operand2 = varToReadFrom;
-
-		instructions.push_back(inst);
 		break;
-	}
 	case LEXEME_DIVIDEEQUALS:
-	{
-		Instruction inst{};
 		inst.type = INSTRUCTION_TYPE_DIVIDE;
-		inst.operand1 = info;
-		inst.operand2 = varToReadFrom;
-
-		instructions.push_back(inst);
 		break;
 	}
-	}
+	instructions.push_back(inst);
 }
 
 void Parser::ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret)
@@ -755,6 +728,13 @@ AbstractSyntaxTree Parser::CreateAST(std::vector<Lexer::Token>& tokens)
 	std::vector<FunctionInfo> infos = GetAllFunctionInfos(tokens);
 	for (FunctionInfo info : infos)
 	{
+		if (Behavior::removeUnusedSymbols && info.name != Behavior::entryPoint && calledFunctions.count(info.name) == 0)
+		{
+			if (Behavior::verbose)
+				std::cout << "found unused function " << info.name << ", removing...\n";
+			continue;
+		}
+
 		Function* fnPtr = new Function(info);
 		ret.functions.insert(fnPtr);
 		if (info.name == Behavior::entryPoint)
@@ -919,6 +899,11 @@ bool Parser::IsFunctionDeclaration(std::vector<Lexer::Token>& tokens)
 	if (tokens.size() < 4)
 		return false;
 	return tokens[0].token == LEXER_TOKEN_DATATYPE && tokens[1].token == LEXER_TOKEN_IDENTIFIER && tokens[2].lexeme == LEXEME_OPEN_PARENTHESIS && tokens.back().lexeme == LEXEME_CLOSE_PARENTHESIS;
+}
+
+bool Parser::DoesFunctionExist(std::string name)
+{
+	return calledFunctions.count(name) > 0;
 }
 
 Lexeme Parser::InstructionTypeToLexemeOperator(InstructionType type)

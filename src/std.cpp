@@ -1,7 +1,8 @@
 #include "std.hpp"
 #include "Interpreter.hpp"
+#include "Parser.hpp"
 
-#define SET_EXTERN_FUNCTION(name) Interpreter::SetExternFunction<##name##>(#name);
+#define SET_EXTERN_FUNCTION(name) if (Parser::DoesFunctionExist(#name)) Interpreter::SetExternFunction<##name##>(#name);
 
 void StandardLib::Init()
 {
