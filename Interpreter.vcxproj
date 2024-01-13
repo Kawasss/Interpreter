@@ -35,6 +35,7 @@
     <ClInclude Include="src\common.hpp" />
     <ClInclude Include="src\Debug.hpp" />
     <ClInclude Include="src\Interpreter.hpp" />
+    <ClInclude Include="src\Optimizer.hpp" />
     <ClInclude Include="src\Parser.hpp" />
     <ClInclude Include="src\Function.hpp" />
     <ClInclude Include="src\Lexer.hpp" />

@@ -21,9 +21,8 @@ public:
 	static void ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, size_t& scopesTraversed);
 
 	static std::vector<Instruction> GetInstructionsFromScopes(std::vector<std::vector<Lexer::Token>>& tokens);
-	static std::vector<Instruction> GetInstructionsFromBody(FunctionBody& body);
 
-	static void GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo);
+	static void GetInstructionsFromRValueRecursive(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo);
 
 	static VariableInfo GetAssignVariableInfo(std::vector<Lexer::Token>& lvalue);
 	static FunctionInfo GetFunctionInfoFromTokens(std::vector<Lexer::Token>& tokens);
@@ -31,12 +30,14 @@ public:
 	static bool DoesFunctionExist(std::string name);
 
 private:
-	static std::vector<std::vector<Lexer::Token>> DivideByEndLine(std::vector<Lexer::Token>& tokens);
+	static void ParseScope(FunctionBody& tokens, std::vector<Instruction>& ret, size_t& scopesTraversed);
 	static FunctionBody GetAllScopesFromBody(std::vector<Lexer::Token>& tokens);
 
-	static std::vector<Instruction> GetDefinitionInstructions(VariableInfo& info, VariableInfo& startValue);
-	static std::vector<Instruction> GetCallFunctionInstructions(FunctionInfo& info, std::vector<VariableInfo>& parameterVars);
-	static void GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);
+	static size_t ParseScopeDeclaration(const std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret, size_t offset); // returns the index of where it left of
+	static size_t ParseScopeOperator(std::vector<Lexer::Token>& tokens,          std::vector<Instruction>& ret, size_t offset);
+	static size_t ParseScopeIdentifier(const std::vector<Lexer::Token>& tokens,  std::vector<Instruction>& ret, size_t offset);
+
+	static void GetFunctionPushInstructions(const std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);
 	static void GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t index, std::vector<Instruction>& ret);
 
 	static void ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);

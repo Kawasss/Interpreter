@@ -20,6 +20,5 @@ void PrintFibonacciSequence(int amount)
 void main()
 {
     WriteLine("test");
-    int amount1 = ToInt(GetLine());
-    PrintFibonacciSequence(amount1);
+    PrintFibonacciSequence(ToInt(GetLine()));
 }

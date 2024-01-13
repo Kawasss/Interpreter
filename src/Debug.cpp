@@ -39,13 +39,13 @@ std::string Debug::DumpInstructionData(const Instruction& instruction)
 		ret.push_back(' ');
 
 	if (instruction.operand1.dataType != DATA_TYPE_INVALID)
-		ret += " " + instruction.operand1.name/* + " (" + DataTypeToString(instruction.operand1.dataType) + ")"*/;
+		ret += " " + (instruction.operand1.literalValue.empty() ? instruction.operand1.name : instruction.operand1.literalValue)/* + " (" + DataTypeToString(instruction.operand1.dataType) + ")"*/;
 
 	while (ret.size() < distanceBeforeOp1 + distanceBeforeOp2)
 		ret.push_back(' ');
 
 	if (instruction.operand2.dataType != DATA_TYPE_INVALID)
-		ret += " " + instruction.operand2.name/* + " (" + DataTypeToString(instruction.operand2.dataType) + ")"*/;
+		ret += " " + (instruction.operand2.literalValue.empty() ? instruction.operand2.name : instruction.operand2.literalValue)/* + " (" + DataTypeToString(instruction.operand2.dataType) + ")"*/;
 
 	return ret;
 }

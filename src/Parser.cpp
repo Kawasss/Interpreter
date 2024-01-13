@@ -8,7 +8,7 @@ StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
 std::unordered_set<std::string> Parser::calledFunctions;
 
-inline size_t GetNextInstanceOfLexeme(Lexeme lexeme, size_t index, std::vector<Lexer::Token>& tokens)
+inline size_t GetNextInstanceOfLexeme(Lexeme lexeme, size_t index, const std::vector<Lexer::Token>& tokens)
 {
 	for (; index < tokens.size(); index++)
 		if (tokens[index].lexeme == lexeme)
@@ -16,7 +16,7 @@ inline size_t GetNextInstanceOfLexeme(Lexeme lexeme, size_t index, std::vector<L
 	return 0;
 }
 
-inline size_t GetNextInstanceOfLexicalToken(LexicalToken token, size_t index, std::vector<Lexer::Token>& tokens)
+inline size_t GetNextInstanceOfLexicalToken(LexicalToken token, size_t index, const std::vector<Lexer::Token>& tokens)
 {
 	for (; index < tokens.size(); index++)
 		if (tokens[index].token == token)
@@ -24,7 +24,7 @@ inline size_t GetNextInstanceOfLexicalToken(LexicalToken token, size_t index, st
 	return 0;
 }
 
-inline size_t GetIndexOfClosingCBracket(size_t index, std::vector<Lexer::Token>& tokens)
+inline size_t GetIndexOfClosingCBracket(size_t index, const std::vector<Lexer::Token>& tokens)
 {
 	int timesReferenced = 0;
 	for (; index < tokens.size(); index++) // this relies on the fact that the tokens vector starts on the opening cbracket
@@ -142,7 +142,7 @@ inline std::vector<Lexer::Token> GetTokensInsideParentheses(std::vector<Lexer::T
 	return {};
 }
 
-void Parser::GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret)
+void Parser::GetFunctionPushInstructions(const std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret)
 {
 	Instruction pushInst{};
 	pushInst.type = INSTRUCTION_TYPE_PUSH;
@@ -166,7 +166,7 @@ void Parser::GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size
 			[[fallthrough]];
 		case LEXEME_COMMA:
 		{
-			GetInstructionsFromRValue(paramTokens, ret, bufferParametersVar);
+			GetInstructionsFromRValueRecursive(paramTokens, ret, bufferParametersVar);
 			ret.back().type = INSTRUCTION_TYPE_PUSH;
 			paramTokens.clear();
 			break;
@@ -182,7 +182,7 @@ void Parser::GetFunctionPushInstructions(std::vector<Lexer::Token>& tokens, size
 	}
 }
 
-void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo)
+void Parser::GetInstructionsFromRValueRecursive(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& destination, const VariableInfo& varToWriteTo)
 {
 	Instruction final{};
 	final.type = INSTRUCTION_TYPE_ASSIGN;
@@ -204,7 +204,7 @@ void Parser::GetInstructionsFromRValue(std::vector<Lexer::Token>& tokens, std::v
 
 			int parenReferenceCount = 0;
 			std::vector<Lexer::Token> priorityTokens = GetTokensInsideParentheses(tokens, i);
-			GetInstructionsFromRValue(priorityTokens, destination, varToWriteTo);
+			GetInstructionsFromRValueRecursive(priorityTokens, destination, varToWriteTo);
 			destination.back().operand1 = floatCalculationVar;
 			break;
 		}
@@ -274,147 +274,127 @@ VariableInfo Parser::GetAssignVariableInfo(std::vector<Lexer::Token>& lvalue)
 	return { lvalue.back().content, simulationStackFrame[lvalue.back().content].GetDataType() };
 }
 
-std::vector<Instruction> Parser::GetDefinitionInstructions(VariableInfo& info, VariableInfo& startValue)
-{
-	std::vector<Instruction> ret;
-
-	Instruction declareInst{};
-	declareInst.type = INSTRUCTION_TYPE_DECLARE;
-	declareInst.operand1 = info;
-	ret.push_back(declareInst);
-
-	if (startValue.dataType == DATA_TYPE_INVALID)
-		return ret;
-
-	Instruction assignInst;
-	assignInst.type = INSTRUCTION_TYPE_ASSIGN;
-	assignInst.operand1 = info;
-	assignInst.operand2 = startValue;
-	ret.push_back(assignInst);
-
-	return ret;
-}
-
-std::vector<Instruction> Parser::GetCallFunctionInstructions(FunctionInfo& info, std::vector<VariableInfo>& parameterVars)
-{
-	if (parameterVars.size() != info.parameters.size())
-		throw std::runtime_error("Incorrect amount of parameters");
-
-	std::vector<Instruction> ret;
-	for (int i = 0; i < info.parameters.size(); i++) // this does not properly define the variables in the correct stack
-	{
-		Instruction pushInst{};
-		pushInst.type = INSTRUCTION_TYPE_PUSH;
-		pushInst.operand1 = bufferParametersVar;
-		pushInst.operand2 = parameterVars[i];
-		ret.push_back(pushInst);
-	}
-	return ret;
-}
-
 void Parser::ParseTokens(FunctionBody& tokens, std::vector<Instruction>& ret, size_t& scopesTraversed)
 {
 	for (; scopesTraversed < tokens.size(); scopesTraversed++)
 	{
-		size_t scopeIndex = scopesTraversed;
-		for (size_t i = 0; i < tokens[scopeIndex].size(); i++)
-		{
-			switch (tokens[scopeIndex][i].token)
-			{
-			case LEXER_TOKEN_DATATYPE:
-			{
-				VariableInfo declVar{};
-				declVar.dataType = (DataType)tokens[scopeIndex][i].lexeme;
-				declVar.name = tokens[scopeIndex][i + 1].content;
-				declVar.size = Sizeof(declVar.dataType);
-
-				Instruction declareInst{};
-				declareInst.type = INSTRUCTION_TYPE_DECLARE;
-				declareInst.operand1 = declVar;
-				ret.push_back(declareInst);
-
-				simulationStackFrame.Allocate(declVar); // the functions stack frame gets simulated here in order to check for out of scope references etc. to prevent runtime errors
-
-				if (tokens[scopeIndex][i + 2].lexeme == LEXEME_ENDLINE) // declaring without a value has a ; at the third token
-					break;
-
-				size_t indexOfEndLine = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
-				std::vector<Lexer::Token> rvalueTokens = { tokens[scopeIndex].begin() + i + 3, tokens[scopeIndex].begin() + indexOfEndLine };
-				GetInstructionsFromRValue(rvalueTokens, ret, declVar);
-				i = indexOfEndLine;
-				break;
-			}
-
-			case LEXER_TOKEN_OPERATOR: // this covers more than just the equals operators so not the best solution
-			{
-				if (tokens[scopeIndex][i].lexeme == LEXEME_PLUSPLUS || tokens[scopeIndex][i].lexeme == LEXEME_MINUSMINUS)
-					ReplaceTokensForSpecialOperator(i, tokens[scopeIndex]);
-
-				if (tokens[scopeIndex][i].content.back() != '=')
-					break;
-				size_t endIndex = GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]);
-				size_t otherEndIndex = GetNextInstanceOfLexeme(LEXEME_CLOSE_PARENTHESIS, i, tokens[scopeIndex]); // this applies to conditional stuff like if's and whiles
-				if (endIndex == 0 || (otherEndIndex != 0 && otherEndIndex < endIndex))
-					endIndex = otherEndIndex;
-
-				std::vector<Lexer::Token> lvalue = { tokens[scopeIndex].begin(), tokens[scopeIndex].begin() + i };
-				std::vector<Lexer::Token> rvalue = { tokens[scopeIndex].begin() + i + 1, tokens[scopeIndex].begin() + endIndex };
-
-				VariableInfo assignVar = GetAssignVariableInfo(lvalue);
-				GetInstructionsFromRValue(rvalue, ret, floatCalculationVar);
-				GetInstructionsForLexemeEqualsOperator(tokens[scopeIndex][i], assignVar, ret);
-				i = endIndex;
-				break;
-			}
-			case LEXER_TOKEN_KEYWORD:
-			{
-				if (tokens[scopeIndex][i].lexeme == LEXEME_IF) // not so pretty if statements
-					ProcessIfStatement(tokens, scopeIndex, scopesTraversed, i, ret);
-				else if (tokens[scopeIndex][i].lexeme == LEXEME_WHILE)
-					ProcessWhileStatement(tokens, scopeIndex, scopesTraversed, i, ret);
-
-				else if (tokens[scopeIndex][i].lexeme == LEXEME_FOR)
-					ProcessForStatement(tokens, scopeIndex, scopesTraversed, i, ret);
-
-				if (tokens[scopeIndex][i].lexeme != LEXEME_RETURN)
-					break;
-
-				Instruction returnInst{};
-				returnInst.type = INSTRUCTION_TYPE_RETURN;
-				if (tokens[scopeIndex][i + 1].lexeme == LEXEME_ENDLINE) // no return value
-				{
-					ret.push_back(returnInst);
-					break;
-				}
-
-				std::vector<Lexer::Token> returnValueTokens = { tokens[scopeIndex].begin() + i + 1, tokens[scopeIndex].begin() + GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]) };
-				GetInstructionsFromRValue(returnValueTokens, ret, floatReturnVar);
-				ret.push_back(returnInst);
-				break;
-			}
-			case LEXER_TOKEN_IDENTIFIER:
-				if (functionInfos.count(tokens[scopeIndex][i].content) <= 0)
-					break;
-
-				std::string functionName = tokens[scopeIndex][i].content;
-				i += 2;
-				GetFunctionPushInstructions(tokens[scopeIndex], i, ret);
-
-				Instruction callInst{};
-				callInst.type = INSTRUCTION_TYPE_CALL;
-				callInst.operand1 = { functionName, functionInfos[functionName].returnType };
-				ret.push_back(callInst);
-
-				if (calledFunctions.count(functionName) == 0)
-					calledFunctions.insert(functionName);
-				break;
-			}
-		}
-		if (scopeIndex == 0 && ret.back().type != INSTRUCTION_TYPE_RETURN)
-			ret.push_back({ INSTRUCTION_TYPE_RETURN });
+		ParseScope(tokens, ret, scopesTraversed);
 	}
 	for (size_t i = 0; i < ret.size(); i++) // lazily check all instructions (not the fastest)
 		CheckInstructionIntegrity(ret[i], i);
+}
+
+void Parser::ParseScope(FunctionBody& tokens, std::vector<Instruction>& ret, size_t& scopesTraversed)
+{
+	size_t scopeIndex = scopesTraversed;
+	for (size_t i = 0; i < tokens[scopeIndex].size(); i++)
+	{
+		switch (tokens[scopeIndex][i].token)
+		{
+		case LEXER_TOKEN_DATATYPE:
+			i = ParseScopeDeclaration(tokens[scopeIndex], ret, i);
+			break;
+
+		case LEXER_TOKEN_OPERATOR: // this covers more than just the equals operators so not the best solution
+			i = ParseScopeOperator(tokens[scopeIndex], ret, i);
+			break;
+		case LEXER_TOKEN_KEYWORD:
+		{
+			if (tokens[scopeIndex][i].lexeme == LEXEME_IF) // not so pretty if statements
+				ProcessIfStatement(tokens, scopeIndex, scopesTraversed, i, ret);
+			else if (tokens[scopeIndex][i].lexeme == LEXEME_WHILE)
+				ProcessWhileStatement(tokens, scopeIndex, scopesTraversed, i, ret);
+
+			else if (tokens[scopeIndex][i].lexeme == LEXEME_FOR)
+				ProcessForStatement(tokens, scopeIndex, scopesTraversed, i, ret);
+
+			if (tokens[scopeIndex][i].lexeme != LEXEME_RETURN)
+				break;
+
+			Instruction returnInst{};
+			returnInst.type = INSTRUCTION_TYPE_RETURN;
+			if (tokens[scopeIndex][i + 1].lexeme == LEXEME_ENDLINE) // no return value
+			{
+				ret.push_back(returnInst);
+				break;
+			}
+
+			std::vector<Lexer::Token> returnValueTokens = { tokens[scopeIndex].begin() + i + 1, tokens[scopeIndex].begin() + GetNextInstanceOfLexeme(LEXEME_ENDLINE, i, tokens[scopeIndex]) };
+			GetInstructionsFromRValueRecursive(returnValueTokens, ret, floatReturnVar);
+			ret.push_back(returnInst);
+			break;
+		}
+		case LEXER_TOKEN_IDENTIFIER:
+			i = ParseScopeIdentifier(tokens[scopeIndex], ret, i);
+			break;
+		}
+	}
+	if (scopeIndex == 0 && ret.back().type != INSTRUCTION_TYPE_RETURN)
+		ret.push_back({ INSTRUCTION_TYPE_RETURN });
+}
+
+size_t Parser::ParseScopeIdentifier(const std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret, size_t offset)
+{
+	if (functionInfos.count(tokens[offset].content) <= 0)
+		return offset;
+
+	std::string functionName = tokens[offset].content;
+	offset += 2;
+	GetFunctionPushInstructions(tokens, offset, ret);
+
+	Instruction callInst{};
+	callInst.type = INSTRUCTION_TYPE_CALL;
+	callInst.operand1 = { functionName, functionInfos[functionName].returnType };
+	ret.push_back(callInst);
+
+	if (calledFunctions.count(functionName) == 0)
+		calledFunctions.insert(functionName);
+	return offset;
+}
+
+size_t Parser::ParseScopeOperator(std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret, size_t offset)
+{
+	if (tokens[offset].lexeme == LEXEME_PLUSPLUS || tokens[offset].lexeme == LEXEME_MINUSMINUS)
+		ReplaceTokensForSpecialOperator(offset, tokens);
+	
+	if (tokens[offset].content.back() != '=')
+		return offset;
+
+	size_t endIndex = GetNextInstanceOfLexeme(LEXEME_ENDLINE, offset, tokens);
+	size_t otherEndIndex = GetNextInstanceOfLexeme(LEXEME_CLOSE_PARENTHESIS, offset, tokens); // this applies to conditional stuff like if's and whiles
+	if (endIndex == 0 || (otherEndIndex != 0 && otherEndIndex < endIndex))
+		endIndex = otherEndIndex;
+
+	std::vector<Lexer::Token> lvalue = { tokens.begin(), tokens.begin() + offset };
+	std::vector<Lexer::Token> rvalue = { tokens.begin() + offset + 1, tokens.begin() + endIndex };
+
+	VariableInfo assignVar = GetAssignVariableInfo(lvalue);
+	GetInstructionsFromRValueRecursive(rvalue, ret, floatCalculationVar);
+	GetInstructionsForLexemeEqualsOperator(tokens[offset], assignVar, ret);
+	return endIndex;
+}
+
+size_t Parser::ParseScopeDeclaration(const std::vector<Lexer::Token>& tokens, std::vector<Instruction>& ret, size_t offset)
+{
+	VariableInfo declVar{};
+	declVar.dataType = (DataType)tokens[offset].lexeme;
+	declVar.name = tokens[offset + 1].content;
+	declVar.size = Sizeof(declVar.dataType);
+
+	Instruction declareInst{};
+	declareInst.type = INSTRUCTION_TYPE_DECLARE;
+	declareInst.operand1 = declVar;
+	ret.push_back(declareInst);
+
+	simulationStackFrame.Allocate(declVar); // the functions stack frame gets simulated here in order to check for out of scope references etc. to prevent runtime errors
+
+	if (tokens[offset + 2].lexeme == LEXEME_ENDLINE) // declaring without a value has a ; at the third token
+		return offset + 2;
+
+	size_t indexOfEndLine = GetNextInstanceOfLexeme(LEXEME_ENDLINE, offset, tokens);
+	std::vector<Lexer::Token> rvalueTokens = { tokens.begin() + offset + 3, tokens.begin() + indexOfEndLine };
+	GetInstructionsFromRValueRecursive(rvalueTokens, ret, declVar);
+	return indexOfEndLine;
 }
 
 void Parser::ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::Token>& tokens)
@@ -618,7 +598,7 @@ void Parser::GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t 
 	std::vector<Lexer::Token> rvalue = { tokens.begin() + conditionMid + 1, tokens.begin() + conditionEnd };
 
 	if (lvalue.size() > 1)
-		GetInstructionsFromRValue(lvalue, ret, leftBoolValue);
+		GetInstructionsFromRValueRecursive(lvalue, ret, leftBoolValue);
 	else if (lvalue[0].token == LEXER_TOKEN_LITERAL)
 	{
 		compareInst.operand1.dataType = LexemeLiteralToDataType(lvalue[0].lexeme);
@@ -632,7 +612,7 @@ void Parser::GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t 
 	compareInst.operand1.size = Sizeof(compareInst.operand1.dataType);	
 
 	if (rvalue.size() > 1)
-		GetInstructionsFromRValue(rvalue, ret, rightBoolValue);
+		GetInstructionsFromRValueRecursive(rvalue, ret, rightBoolValue);
 	else if (rvalue[0].token == LEXER_TOKEN_LITERAL)
 	{
 		compareInst.operand2.dataType = LexemeLiteralToDataType(rvalue[0].lexeme);
@@ -659,34 +639,6 @@ std::vector<Instruction> Parser::GetInstructionsFromScopes(std::vector<std::vect
 	return ret;
 }
 
-std::vector<Instruction> Parser::GetInstructionsFromBody(FunctionBody& body)
-{
-	std::vector<Instruction> ret;
-	/*for (std::vector<Lexer::Token>& tokens : body)
-	{
-		std::vector<std::vector<Lexer::Token>> tokensPerLine = DivideByEndLine(tokens);
-		for (std::vector<Lexer::Token> tokenLine : tokensPerLine)
-			ParseTokens(tokenLine, ret);
-	}*/
-	return ret;
-}
-
-std::vector<std::vector<Lexer::Token>> Parser::DivideByEndLine(std::vector<Lexer::Token>& tokens)
-{
-	std::vector<std::vector<Lexer::Token>> ret;
-	std::vector<Lexer::Token> current;
-	for (int i = 0; i < tokens.size(); i++)
-	{
-		current.push_back(tokens[i]);
-		if (tokens[i].lexeme != LEXEME_ENDLINE)
-			continue;
-
-		ret.push_back(current);
-		current.clear();
-	}
-	return ret;
-}
-
 inline void GetScopesRecursive(std::vector<Lexer::Token>& tokens, int& index, FunctionBody& ret)
 {
 	ret.push_back({});
@@ -700,7 +652,6 @@ inline void GetScopesRecursive(std::vector<Lexer::Token>& tokens, int& index, Fu
 			GetScopesRecursive(tokens, index, ret);
 			break;
 		case LEXEME_CLOSE_CBRACKET:
-			//index++;
 			return;
 		default:
 			ret[assigningIndex].push_back(tokens[index]);
