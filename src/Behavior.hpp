@@ -10,6 +10,7 @@ enum Args
 	ARG_ENTRY_POINT,
 	ARG_DUMP_INSTRUCTIONS,
 	ARG_DUMP_STACK_FRAMES,
+	ARG_DUMP_TOKENS,
 	ARG_TREAT_VOID_AS_ERROR,
 	ARG_DISABLE_IMPLICIT_CONVERSION,
 	ARG_INPUT,
@@ -23,6 +24,7 @@ namespace Behavior
 	inline bool verbose = false;
 	inline bool dumpFunctionInstructions = false;
 	inline bool dumpStackFrame = false;
+	inline bool dumpTokens = false;
 	inline bool treatVoidAsError = false;
 	inline bool disableImplicitConversion = false;
 	inline bool removeUnusedSymbols = false;
@@ -39,6 +41,7 @@ namespace Behavior
 			{ "-input",   ARG_INPUT   }, { "-dump_stack_frames", ARG_DUMP_STACK_FRAMES }, { "-treat_void_as_error", ARG_TREAT_VOID_AS_ERROR },
 			{ "-remove_unused_symbols", ARG_REMOVE_UNUSED_SYMBOLS }, {"-disable_implicit_conversion", ARG_DISABLE_IMPLICIT_CONVERSION},
 			{ "-optimize_instructions", ARG_OPTIMIZE_INSTRUCTIONS }, { "-parse_multithreaded", ARG_PARSE_MULTITHREADED },
+			{ "-dump_tokens", ARG_DUMP_TOKENS },
 		};
 		for (int i = 0; i < argc; i++)
 		{
@@ -76,6 +79,9 @@ namespace Behavior
 				break;
 			case ARG_OPTIMIZE_INSTRUCTIONS:
 				optimizeInstructions = true;
+				break;
+			case ARG_DUMP_TOKENS:
+				dumpTokens = true;
 				break;
 			}
 		}

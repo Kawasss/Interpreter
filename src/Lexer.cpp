@@ -194,3 +194,75 @@ bool Lexer::IsFloatLiteral(std::string item)
 {
 	return item.find('.') != std::string::npos;
 }
+
+std::string LexicalTokenToString(LexicalToken token)
+{
+	switch (token)
+	{
+	case LEXER_TOKEN_INVALID:    return "LEXER_TOKEN_INVALID";
+	case LEXER_TOKEN_IDENTIFIER: return "LEXER_TOKEN_IDENTIFIER";
+	case LEXER_TOKEN_SEPERATOR:  return "LEXER_TOKEN_SEPERATOR";
+	case LEXER_TOKEN_LITERAL:    return "LEXER_TOKEN_LITERAL";
+	case LEXER_TOKEN_KEYWORD:    return "LEXER_TOKEN_KEYWORD";
+	case LEXER_TOKEN_OPERATOR:   return "LEXER_TOKEN_OPERATOR";
+	case LEXER_TOKEN_DATATYPE:   return "LEXER_TOKEN_DATATYPE";
+	case LEXER_TOKEN_WHITESPACE: return "LEXER_TOKEN_WHITESPACE";	
+	}
+	return "";
+}
+
+std::string LexemeToString(Lexeme value)
+{
+	switch (value)
+	{
+	case LEXEME_INVALID:           return "LEXEME_INVALID";
+	case LEXEME_DATATYPE_CHAR:     return "LEXEME_DATATYPE_CHAR";
+	case LEXEME_DATATYPE_FLOAT:    return "LEXEME_DATATYPE_FLOAT";
+	case LEXEME_DATATYPE_INT:      return "LEXEME_DATATYPE_INT";
+	case LEXEME_DATATYPE_STRING:   return "LEXEME_DATATYPE_STRING";
+	case LEXEME_DATATYPE_VOID:     return "LEXEME_DATATYPE_VOID";
+	case LEXEME_IDENTIFIER:        return "LEXEME_IDENTIFIER";
+	case LEXEME_RETURN:            return "LEXEME_RETURN";
+	case LEXEME_EXTERN:            return "LEXEME_EXTERN";
+	case LEXEME_IF:                return "LEXEME_IF";
+	case LEXEME_WHILE:             return "LEXEME_WHILE";
+	case LEXEME_FOR:               return "LEXEME_FOR";
+	case LEXEME_IMPORT:            return "LEXEME_IMPORT";
+	case LEXEME_ENDLINE:           return "LEXEME_ENDLINE";
+	case LEXEME_NEWLINE:           return "LEXEME_NEWLINE";
+	case LEXEME_LITERAL_CHAR:      return "LEXEME_LITERAL_CHAR";
+	case LEXEME_LITERAL_FLOAT:     return "LEXEME_LITERAL_FLOAT";
+	case LEXEME_LITERAL_INT:       return "LEXEME_LITERAL_INT";
+	case LEXEME_LITERAL_STRING:    return "LEXEME_LITERAL_STRING";
+	case LEXEME_USERTYPE:          return "LEXEME_USERTYPE";
+	case LEXEME_STRUCT:            return "LEXEME_STRUCT";
+	case LEXEME_DOT:               return "LEXEME_DOT";
+	case LEXEME_COMMA:             return "LEXEME_COMMA";
+	case LEXEME_EQUALS:            return "LEXEME_EQUALS";
+	case LEXEME_PLUSEQUALS:        return "LEXEME_PLUSEQUALS";
+	case LEXEME_MINUSEQUALS:       return "LEXEME_MINUSEQUALS";
+	case LEXEME_MULTIPLYEQUALS:    return "LEXEME_MULTIPLYEQUALS";
+	case LEXEME_DIVIDEEQUALS:      return "LEXEME_DIVIDEEQUALS";
+	case LEXEME_ISNOT:             return "LEXEME_ISNOT";
+	case LEXEME_ISNOT_SINGLE:      return "LEXEME_ISNOT_SINGLE";
+	case LEXEME_IS:                return "LEXEME_IS";
+	case LEXEME_GREATER:           return "LEXEME_GREATER";
+	case LEXEME_IS_OR_GREATER:     return "LEXEME_IS_OR_GREATER";
+	case LEXEME_LESS:              return "LEXEME_LESS";
+	case LEXEME_IS_OR_LESS:        return "LEXEME_IS_OR_LESS";
+	case LEXEME_PLUS:              return "LEXEME_PLUS";
+	case LEXEME_MINUS:             return "LEXEME_MINUS";
+	case LEXEME_MULTIPLY:          return "LEXEME_MULTIPLY";
+	case LEXEME_DIVIDE:            return "LEXEME_DIVIDE";
+	case LEXEME_PLUSPLUS:          return "LEXEME_PLUSPLUS";
+	case LEXEME_MINUSMINUS:        return "LEXEME_MINUSMINUS";
+	case LEXEME_WHITESPACE:        return "LEXEME_WHITESPACE";
+	case LEXEME_OPEN_CBRACKET:     return "LEXEME_OPEN_CBRACKET";
+	case LEXEME_CLOSE_CBRACKET:    return "LEXEME_CLOSE_CBRACKET";
+	case LEXEME_OPEN_SBRACKET:     return "LEXEME_OPEN_SBRACKET";
+	case LEXEME_CLOSE_SBRACKET:    return "LEXEME_CLOSE_SBRACKET";
+	case LEXEME_OPEN_PARENTHESIS:  return "LEXEME_OPEN_PARENTHESIS";
+	case LEXEME_CLOSE_PARENTHESIS: return "LEXEME_CLOSE_PARENTHESIS";
+	}
+	return "";
+}

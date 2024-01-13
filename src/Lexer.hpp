@@ -17,6 +17,7 @@ enum LexicalToken
 	LEXER_TOKEN_DATATYPE,
 	LEXER_TOKEN_WHITESPACE
 };
+inline extern std::string LexicalTokenToString(LexicalToken token);
 
 enum Lexeme
 {
@@ -69,6 +70,7 @@ enum Lexeme
 	LEXEME_OPEN_PARENTHESIS,
 	LEXEME_CLOSE_PARENTHESIS,
 };
+inline extern std::string LexemeToString(Lexeme lexeme);
 
 class Lexer
 {

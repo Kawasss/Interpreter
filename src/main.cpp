@@ -7,6 +7,7 @@
 #include "Function.hpp"
 #include "std.hpp"
 #include "Behavior.hpp"
+#include "Debug.hpp"
 
 inline std::vector<char> ReadFile(const std::string& filePath)
 {
@@ -50,6 +51,14 @@ inline void InterpretString(std::string input)
 {
 	std::vector<Lexer::Token> tokens = Lexer::LexInput(input);
 	CheckForImport(tokens);
+
+	if (Behavior::dumpTokens)
+	{
+		for (Lexer::Token& token : tokens)
+			std::cout << Debug::DumpToken(token) << "\n";
+		return;
+	}
+
 	AbstractSyntaxTree tree = Parser::CreateAST(tokens);
 	if (Behavior::verbose)
 	{
@@ -91,7 +100,7 @@ int main(int argsc, const char** argsv)
 	}
 
 	#ifdef _WIN32 // afaik this only works on windows?
-	std::cout << "\nExecution ended, press any key to exit...";
+	std::cout << "\nExecution ended, press any key to exit..." << std::endl;
 	_getch();
 	#endif
 

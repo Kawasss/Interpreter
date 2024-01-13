@@ -1,6 +1,7 @@
 #include "Debug.hpp"
 #include "common.hpp"
 #include "StackFrame.hpp"
+#include "Lexer.hpp"
 #include <sstream>
 #include <iomanip>
 
@@ -62,5 +63,31 @@ std::string Debug::DumpInstructionsData(const std::vector<Instruction>& instruct
 
 		ret += index + DumpInstructionData(instructions[i]) + "\n";
 	}
+	return ret;
+}
+
+std::string Debug::DumpToken(Lexer::Token& token)
+{
+	static constexpr int contentLength = 12;
+	static constexpr int tokenLength = 23;
+
+	std::string ret = "line: ";
+	std::string line = std::to_string(token.line);
+	for (int i = 0; i < 4 - line.size(); i++) // give each string the same length indepedent of the length of the line string
+		ret += '0';
+	ret += line + ' ';
+
+	ret += " content: " + token.content;
+	for (int i = 0; i < contentLength - token.content.size(); i++)
+		ret += ' ';
+
+	std::string tokenAsString = LexicalTokenToString(token.token);
+	ret += " token: " + tokenAsString;
+	for (int i = 0; i < tokenLength - tokenAsString.size(); i++)
+		ret += ' ';
+
+	std::string lexemeAsString = LexemeToString(token.lexeme);
+	ret += " lexeme: " + lexemeAsString;
+
 	return ret;
 }
