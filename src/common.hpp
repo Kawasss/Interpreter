@@ -42,6 +42,7 @@ enum DataType
 	DATA_TYPE_INT,
 	DATA_TYPE_STRING,
 	DATA_TYPE_VOID,
+	DATA_TYPE_UINT64,
 	DATA_TYPE_USERTYPE,
 	DATA_TYPE_FLOAT_CONSTANT,
 	DATA_TYPE_CHAR_CONSTANT,
@@ -66,6 +67,8 @@ template<typename T> inline DataType GetDataTypeTemplate()
 		return DATA_TYPE_CHAR;
 	if (std::is_same_v<T, int>)
 		return DATA_TYPE_INT;
+	if (std::is_same_v<T, uint64_t>)
+		return DATA_TYPE_UINT64;
 	if (std::is_same_v<T, std::string>)
 		return DATA_TYPE_STRING;
 	return DATA_TYPE_INVALID;
@@ -113,6 +116,7 @@ struct Variable
 	operator float() const;
 	operator int() const;
 	operator char() const;
+	operator uint64_t() const;
 	operator std::string() const;
 
 	Variable& operator=(float rvalue);

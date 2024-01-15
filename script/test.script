@@ -25,13 +25,13 @@ void main()
     WriteLine("test");
 
     int padding;
+    int padding1;
 
-    int test = 43242;
-    int test1 = &test;
-    int test2 = *test1;
+    int base = 2342;
+    memory test = &base;
+    int super = *test;
 
-    WriteLine(IntToString(test2)); # the derefenced value
-    WriteLine(IntToString(test1)); # the pointer value
+    WriteLine(IntToString(super));
 
     PrintFibonacciSequence(ToInt(GetLine()));
 }

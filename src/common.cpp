@@ -163,6 +163,8 @@ Variable& Variable::operator+=(const Variable& rvalue)
 	case DATA_TYPE_CHAR_CONSTANT:
 		*(char*)data.data() += (char)rvalue;
 		break;
+	case DATA_TYPE_UINT64:
+		*(uint64_t*)data.data() += (uint64_t)rvalue;
 	}
 	return *this;
 }
@@ -317,6 +319,8 @@ Variable::operator char() const
 	case DATA_TYPE_CHAR:
 	case DATA_TYPE_CHAR_CONSTANT:
 		return *(char*)data.data();
+	case DATA_TYPE_UINT64:
+		return (char)*(uint64_t*)data.data();
 	}
 	return '\0';
 }
@@ -334,6 +338,8 @@ Variable::operator float() const
 	case DATA_TYPE_CHAR:
 	case DATA_TYPE_CHAR_CONSTANT:
 		return (float)*(char*)data.data();
+	case DATA_TYPE_UINT64:
+		return (float)*(uint64_t*)data.data();
 	}
 	return 0;
 }
@@ -354,6 +360,30 @@ Variable::operator int() const
 	case DATA_TYPE_CHAR:
 	case DATA_TYPE_CHAR_CONSTANT:
 		return (int)*(char*)data.data();
+	case DATA_TYPE_UINT64:
+		return (int)*(uint64_t*)data.data();
+	}
+	return 0;
+}
+
+Variable::operator uint64_t() const
+{
+	switch (type)
+	{
+	case DATA_TYPE_VOID:
+	case DATA_TYPE_INT:
+	case DATA_TYPE_INT_CONSTANT:
+		return *(int*)data.data();
+
+	case DATA_TYPE_FLOAT:
+	case DATA_TYPE_FLOAT_CONSTANT:
+		return (int)*(float*)data.data();
+
+	case DATA_TYPE_CHAR:
+	case DATA_TYPE_CHAR_CONSTANT:
+		return (int)*(char*)data.data();
+	case DATA_TYPE_UINT64:
+		return *(uint64_t*)data.data();
 	}
 	return 0;
 }
@@ -375,6 +405,8 @@ std::string Variable::AsString()
 		return std::to_string(*(float*)data.data());
 	case DATA_TYPE_INT:
 		return std::to_string(*(int*)data.data());
+	case DATA_TYPE_UINT64:
+		return std::to_string(*(uint64_t*)data.data());
 	case DATA_TYPE_VOID:
 		if (data.size() < sizeof(std::string))
 			break;
@@ -429,6 +461,7 @@ size_t Sizeof(DataType dataType)
 	case DATA_TYPE_CHAR: return sizeof(char);
 	case DATA_TYPE_INT_CONSTANT:
 	case DATA_TYPE_INT: return sizeof(int);
+	case DATA_TYPE_UINT64: return sizeof(uint64_t);
 	case DATA_TYPE_STRING_CONSTANT:
 	case DATA_TYPE_STRING: return sizeof(std::string);
 	}
@@ -476,6 +509,7 @@ std::string DataTypeToInternalTypeString(DataType type)
 	case DATA_TYPE_STRING:          return "string";
 	case DATA_TYPE_VOID:            return "void";
 	case DATA_TYPE_USERTYPE:        return "user_type";
+	case DATA_TYPE_UINT64:          return "uint64";
 	case DATA_TYPE_FLOAT_CONSTANT:  return "float_literal";
 	case DATA_TYPE_CHAR_CONSTANT:   return "char_literal";
 	case DATA_TYPE_INT_CONSTANT:    return "int_literal";
