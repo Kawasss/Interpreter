@@ -76,7 +76,7 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 		case INSTRUCTION_TYPE_ASSIGN:
 		{
 			Variable var = GetValue(instruction.operand2);
-			var.name = instruction.operand1.name;
+			var.name = instruction.operand1.name; // weird??
 			*FindVariable(instruction.operand1) = var;// GetValue(instruction.operand2);
 			if (cacheVariables.count(instruction.operand2.name) > 0) // if a cache variable is read from (done being used) it gets reset
 				cacheVariables[instruction.operand2.name] = Variable(VariableInfo{ instruction.operand2.name, DATA_TYPE_VOID, 40 });
@@ -120,6 +120,13 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 		case INSTRUCTION_TYPE_POP_SCOPE:
 			stack.Last().DecrementScope();
 			break;
+
+		case INSTRUCTION_TYPE_DEREFERENCE: // with deference the first operand is the pointer, the second is the variable to copy to
+		{
+			MemoryLocation location = (int)GetValue(instruction.operand1);
+			*FindVariable(instruction.operand2) = stack.Last().GetVariableAtMemoryLocation(location);
+			break;
+		}
 
 		case INSTRUCTION_TYPE_INVALID:
 			throw std::runtime_error("Recieved invalid instruction");
@@ -176,7 +183,6 @@ Variable* Interpreter::FindVariable(std::string name)
 		return &stack.Last().GetVariable(name);
 	}
 		
-
 	throw std::runtime_error("Failed to find variable " + name);
 }
 

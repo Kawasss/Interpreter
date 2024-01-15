@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_set>
+#include <unordered_map>
 #include "common.hpp"
 #include "Lexer.hpp"
 #include "Function.hpp"
@@ -11,6 +12,13 @@ struct AbstractSyntaxTree
 {
 	std::unordered_set<Function*> functions;
 	Function* entryPoint = nullptr;
+};
+
+struct StructInfo
+{
+	std::string name;
+	size_t size;
+	std::vector<VariableInfo> variables;
 };
 
 class Parser
@@ -40,15 +48,19 @@ private:
 	static void GetFunctionPushInstructions(const std::vector<Lexer::Token>& tokens, size_t& index, std::vector<Instruction>& ret);
 	static void GetConditionInstructions(std::vector<Lexer::Token>& tokens, size_t index, std::vector<Instruction>& ret);
 
+	static void ProcessKeyword(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessIfStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
+	static void ProcessReturnStatement(std::vector<Lexer::Token>& tokens, size_t& i, std::vector<Instruction>& ret);
+	static void ProcessLocationOfOperator(const std::vector<Lexer::Token>& tokens, size_t& i, VariableInfo& info);
+	static void ProcessDereferenceOperator(const std::vector<Lexer::Token>& tokens, size_t& i, Instruction& instruction);
 
 	static void GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);
 
 	static void CheckOpenCloseIntegrityPremature(const std::vector<Lexer::Token>& tokens);
-	static void CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue, int line);
-	static void CheckInstructionIntegrity(const Instruction& instruction, int index);
+	static void CheckOperationIntegrity(const Lexeme op, const VariableInfo& lvalue, const VariableInfo& rvalue, size_t line);
+	static void CheckInstructionIntegrity(const Instruction& instruction, size_t index);
 	static Lexeme InstructionTypeToLexemeOperator(InstructionType type);
 
 	static void ReplaceTokensForSpecialOperator(size_t index, std::vector<Lexer::Token>& tokens);

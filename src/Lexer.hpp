@@ -69,6 +69,7 @@ enum Lexeme
 	LEXEME_CLOSE_SBRACKET, // ]
 	LEXEME_OPEN_PARENTHESIS,
 	LEXEME_CLOSE_PARENTHESIS,
+	LEXEME_AMPERSAND,
 };
 inline extern std::string LexemeToString(Lexeme lexeme);
 

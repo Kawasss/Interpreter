@@ -461,6 +461,7 @@ std::string InstructionTypeToString(InstructionType type)
 	case INSTRUCTION_TYPE_PUSH_SCOPE:        return "INSTRUCTION_TYPE_PUSH_SCOPE";
 	case INSTRUCTION_TYPE_POP_SCOPE:         return "INSTRUCTION_TYPE_POP_SCOPE";
 	case INSTRUCTION_TYPE_INDEX:             return "INSTRUCTION_TYPE_INDEX";
+	case INSTRUCTION_TYPE_DEREFERENCE:       return "INSTRUCTION_TYPE_DEREFERENCE";
 	}
 	return "";
 }

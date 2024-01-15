@@ -29,7 +29,8 @@ enum InstructionType
 	INSTRUCTION_TYPE_JUMP, // jump is relative to the current instruction index
 	INSTRUCTION_TYPE_PUSH_SCOPE,
 	INSTRUCTION_TYPE_POP_SCOPE,
-	INSTRUCTION_TYPE_INDEX
+	INSTRUCTION_TYPE_INDEX,
+	INSTRUCTION_TYPE_DEREFERENCE
 };
 inline extern std::string InstructionTypeToString(InstructionType type);
 

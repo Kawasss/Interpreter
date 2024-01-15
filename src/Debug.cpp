@@ -32,9 +32,12 @@ std::string Debug::DumpStackFrame(const StackFrame* stackFrame)
 
 std::string Debug::DumpInstructionData(const Instruction& instruction)
 {
-	static constexpr int distanceBeforeOp1 = 35;
+	static constexpr int distanceBeforeOp1 = 15;
 	static constexpr int distanceBeforeOp2 = 25;
+
 	std::string ret = InstructionTypeToString(instruction.type);
+	ret = ret.substr(17, ret.size() - 17); // remove the INSTRUCTION_TYPE_ from the string, the length of that is 17
+
 	while (ret.size() < distanceBeforeOp1)
 		ret.push_back(' ');
 

@@ -19,6 +19,7 @@ void StandardLib::Init()
 			SET_EXTERN_FUNCTION(ToFloat);
 			SET_EXTERN_FUNCTION(ToInt);
 			SET_EXTERN_FUNCTION(ToString);
+			SET_EXTERN_FUNCTION(IntToString);
 		}
 		if (file == "std/string.script")
 		{
@@ -55,6 +56,20 @@ ToString::ToString(Function* function) : Function(function)
 void ToString::Execute()
 {
 	Return({ {}, DATA_TYPE_STRING, sizeof(std::string), Interpreter::FindVariable("value")->AsString() });
+}
+
+IntToString::IntToString(Function* function) : Function(function)
+{
+	name = "IntToString";
+	parameters = { { "value", DATA_TYPE_INT } };
+	returnType = DATA_TYPE_STRING;
+}
+
+void IntToString::Execute()
+{
+	Variable* var = Interpreter::FindVariable("value");
+	var->SetDataType(DATA_TYPE_INT);
+	Return({ {}, DATA_TYPE_STRING, sizeof(std::string), var->AsString() });
 }
 
 ToFloat::ToFloat(Function* function) : Function(function)

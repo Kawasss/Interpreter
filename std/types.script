@@ -1,3 +1,4 @@
 extern string ToString(float value);
+extern string IntToString(int value);
 extern float ToFloat(string text);
 extern int ToInt(string text);
