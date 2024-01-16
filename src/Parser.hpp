@@ -53,7 +53,7 @@ private:
 	static void ProcessWhileStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessForStatement(std::vector<std::vector<Lexer::Token>>& tokens, size_t scopeIndex, size_t& scopesTraversed, size_t& i, std::vector<Instruction>& ret);
 	static void ProcessReturnStatement(std::vector<Lexer::Token>& tokens, size_t& i, std::vector<Instruction>& ret);
-	static void ProcessLocationOfOperator(const std::vector<Lexer::Token>& tokens, size_t& i, VariableInfo& info);
+	static void ProcessLocationOfOperator(const std::vector<Lexer::Token>& tokens, size_t& i, Instruction& instruction);
 	static void ProcessDereferenceOperator(const std::vector<Lexer::Token>& tokens, size_t& i, Instruction& instruction);
 
 	static void GetInstructionsForLexemeEqualsOperator(const Lexer::Token& op, const VariableInfo& varToWriteTo, std::vector<Instruction>& instructions);

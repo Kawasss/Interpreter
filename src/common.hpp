@@ -30,7 +30,8 @@ enum InstructionType
 	INSTRUCTION_TYPE_PUSH_SCOPE,
 	INSTRUCTION_TYPE_POP_SCOPE,
 	INSTRUCTION_TYPE_INDEX,
-	INSTRUCTION_TYPE_DEREFERENCE
+	INSTRUCTION_TYPE_DEREFERENCE,
+	INSTRUCTION_TYPE_ASSIGN_LOCATION
 };
 inline extern std::string InstructionTypeToString(InstructionType type);
 
@@ -122,8 +123,9 @@ struct Variable
 	Variable& operator=(float rvalue);
 	Variable& operator=(char rvalue);
 	Variable& operator=(int rvalue);
+	Variable& operator=(uint64_t value);
 	Variable& operator=(std::string rvalue);
-
+	
 	std::string name = "";
 	DataType type = DATA_TYPE_INVALID;
 	DataType baseType = DATA_TYPE_INVALID; // only applies if the variable is a pointer

@@ -3,6 +3,7 @@
 #include "Parser.hpp"
 #include "Interpreter.hpp"
 #include "Behavior.hpp"
+#include "common.hpp"
 
 StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
@@ -212,7 +213,7 @@ void Parser::GetInstructionsFromRValueRecursive(std::vector<Lexer::Token>& token
 			if ((tokens[i].lexeme == LEXEME_AMPERSAND || tokens[i].lexeme == LEXEME_MULTIPLY) && (i == 0 || tokens[i - 1].lexeme != LEXEME_IDENTIFIER))
 			{
 				if (tokens[i].lexeme == LEXEME_AMPERSAND)
-					ProcessLocationOfOperator(tokens, i, final.operand2);
+					ProcessLocationOfOperator(tokens, i, final);
 				else if (tokens[i].lexeme == LEXEME_MULTIPLY)
 					ProcessDereferenceOperator(tokens, i, final);
 
@@ -293,15 +294,13 @@ void Parser::ProcessDereferenceOperator(const std::vector<Lexer::Token>& tokens,
 	i++;
 }
 
-void Parser::ProcessLocationOfOperator(const std::vector<Lexer::Token>& tokens, size_t& i, VariableInfo& info)
+void Parser::ProcessLocationOfOperator(const std::vector<Lexer::Token>& tokens, size_t& i, Instruction& instruction)
 {
 	if (!simulationStackFrame.Has(tokens[i + 1].content))
 		throw std::runtime_error("Cannot get the location of variable " + tokens[i + 1].content + ", it is undefined");
 
-	info.dataType = DATA_TYPE_INT;
-	info.literalValue = std::to_string((int)simulationStackFrame.EncodeVariableIntoLocation(tokens[i + 1].content));
-	info.size = sizeof(uint32_t);
-	info.name = "";
+	instruction.type = INSTRUCTION_TYPE_ASSIGN_LOCATION;
+	instruction.operand2.name = tokens[i + 1].content;
 	i++;
 }
 

@@ -17,21 +17,16 @@ void PrintFibonacciSequence(int amount)
         x = y;
         y = z;
     }
-    return;
+}
+
+void PrintHelloWorld(memory text)
+{
+    WriteLine(*text);
 }
 
 void main()
 {
-    WriteLine("test");
-
-    int padding;
-    int padding1;
-
-    int base = 2342;
-    memory test = &base;
-    int super = *test;
-
-    WriteLine(IntToString(super));
-
-    PrintFibonacciSequence(ToInt(GetLine()));
+    string test = "hello world!";
+    memory ptr = &test;
+    PrintHelloWorld(ptr);
 }

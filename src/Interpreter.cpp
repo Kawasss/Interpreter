@@ -4,6 +4,7 @@
 #include "Parser.hpp"
 #include "Debug.hpp"
 #include "Behavior.hpp"
+#include "common.hpp"
 
 Scope Interpreter::cacheVariables;
 
@@ -123,11 +124,14 @@ bool Interpreter::ExecuteInstructions(std::vector<Instruction> instructions)
 
 		case INSTRUCTION_TYPE_DEREFERENCE: // with deference the first operand is the pointer, the second is the variable to copy to
 		{
-			MemoryLocation location = (int)GetValue(instruction.operand1);
-			*FindVariable(instruction.operand2) = stack.Last().GetVariableAtMemoryLocation(location);
+			Variable* location = (Variable*)(uint64_t)GetValue(instruction.operand1);
+			*FindVariable(instruction.operand2) = *location;
 			break;
 		}
-
+		case INSTRUCTION_TYPE_ASSIGN_LOCATION:
+			*FindVariable(instruction.operand1) = (uint64_t)FindVariable(instruction.operand2);
+			break;
+		
 		case INSTRUCTION_TYPE_INVALID:
 			throw std::runtime_error("Recieved invalid instruction");
 		}

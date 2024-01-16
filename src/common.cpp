@@ -123,6 +123,16 @@ Variable& Variable::operator=(int rvalue)
 	memcpy(data.data(), &rvalue, size);
 	return *this;
 }
+
+Variable& Variable::operator=(uint64_t value)
+{
+	size = sizeof(value);
+	type = DATA_TYPE_UINT64;
+	data.resize(size);
+	memcpy(data.data(), &value, sizeof(value));
+	return *this;
+}
+
 Variable& Variable::operator=(std::string rvalue)
 {
 	if (size == 0)
@@ -495,6 +505,7 @@ std::string InstructionTypeToString(InstructionType type)
 	case INSTRUCTION_TYPE_POP_SCOPE:         return "INSTRUCTION_TYPE_POP_SCOPE";
 	case INSTRUCTION_TYPE_INDEX:             return "INSTRUCTION_TYPE_INDEX";
 	case INSTRUCTION_TYPE_DEREFERENCE:       return "INSTRUCTION_TYPE_DEREFERENCE";
+	case INSTRUCTION_TYPE_ASSIGN_LOCATION:   return "INSTRUCTION_TYPE_ASSIGN_LOCATION";
 	}
 	return "";
 }
