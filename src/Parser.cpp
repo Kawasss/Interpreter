@@ -4,6 +4,7 @@
 #include "Interpreter.hpp"
 #include "Behavior.hpp"
 #include "common.hpp"
+#include "Optimizer.hpp"
 
 StackFrame Parser::simulationStackFrame;
 std::unordered_map<std::string, FunctionInfo> Parser::functionInfos;
@@ -116,6 +117,7 @@ std::vector<FunctionInfo> Parser::GetAllFunctionInfos(std::vector<Lexer::Token>&
 			std::vector<Lexer::Token> bodyTokens = { tokens.begin() + cParenIndex + 2, tokens.begin() + cBracketIndex };
 			std::vector<std::vector<Lexer::Token>> test = GetAllScopesFromBody(bodyTokens);
 			functionInfo.instructions = GetInstructionsFromScopes(test);
+			Optimizer::OptimizeInstructions(functionInfo.instructions);
 			simulationStackFrame.Clear();
 			i = cBracketIndex;
 

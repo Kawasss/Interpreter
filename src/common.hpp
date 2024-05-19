@@ -81,6 +81,8 @@ struct VariableInfo
 	DataType dataType = DATA_TYPE_INVALID;
 	uint32_t size = 0;
 	std::string literalValue;
+
+	friend extern bool operator==(const VariableInfo& lvalue, const VariableInfo& rvalue);
 };
 
 struct Variable

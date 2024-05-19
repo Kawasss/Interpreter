@@ -478,6 +478,13 @@ size_t Sizeof(DataType dataType)
 	return 0;
 }
 
+bool operator==(const VariableInfo& lvalue, const VariableInfo& rvalue)
+{
+	if (lvalue.name == "" && rvalue.name == "")
+		return lvalue.literalValue == rvalue.literalValue && lvalue.dataType == rvalue.dataType;
+	return lvalue.name == rvalue.name && lvalue.dataType == rvalue.dataType;
+}
+
 std::string InstructionTypeToString(InstructionType type)
 {
 	switch (type)

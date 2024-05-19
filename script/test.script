@@ -19,14 +19,13 @@ void PrintFibonacciSequence(int amount)
     }
 }
 
-void PrintHelloWorld(memory text)
+string CombineStrings(string first, string second)
 {
-    WriteLine(*text);
+    return first + second;
 }
 
 void main()
 {
-    string test = "hello world!";
-    memory ptr = &test;
-    PrintHelloWorld(ptr);
+    string output = CombineStrings("Hello ", "world!");
+    WriteLine(output);
 }
